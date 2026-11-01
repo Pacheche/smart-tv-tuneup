@@ -1,8 +1,6 @@
 # smart-tv-tuneup
 
-An agent skill to speed up a slow smart TV the safe way: identify first, plan before touching anything, disable bloatware with `pm disable-user` (never uninstall), verify after every batch, and always leave a written way to revert.
-
-> **Estado: v0.1.0, experimental.** Los scripts tienen pruebas offline y el método se evaluó con casos simulados, pero esta versión todavía no se ejecutó de punta a punta en una tele real.
+Guía para optimizar cualquier smart TV con tu agente de IA.
 
 ## Instalación
 
@@ -54,9 +52,7 @@ Deshabilitar paquetes puede dejar una tele sin arrancar. Esta skill existe justo
 
 ## Créditos
 
-- La lista de paquetes del núcleo de Android (`CORE_RE` / `CORE_OK`) y el método de deshabilitar sin desinstalar vienen de [cleanyourtv](https://github.com/Gathin23/cleanyourtv) (MIT, commit fijo `6e8615eb0be0e843ceeebedae246d69f3e0a88d7`): se copian literales y con el origen anotado. Ver `THIRD_PARTY.md`.
-- El patrón de menús de fábrica viene de [free-my-tv](https://github.com/simbasjungles/free-my-tv) (MIT), con el origen anotado.
-- La idea de no inventar métricas que la tele no expone viene de [pranavsarathi/android-tv-makeover](https://github.com/pranavsarathi/android-tv-makeover): se toma solo la idea; no se copia código.
-- El método de medición y los límites por plataforma se apoyan en [paisanos-io/tv-makeover](https://github.com/paisanos-io/tv-makeover), [simbasjungles/free-my-tv](https://github.com/simbasjungles/free-my-tv), [frxnnk/webos-liquid-glass-launcher](https://github.com/frxnnk/webos-liquid-glass-launcher) y [danielthejoker18/FreeMyTvWebOS](https://github.com/danielthejoker18/FreeMyTvWebOS) (todos MIT). Cada dato de los `references/` lleva su archivo y línea.
+- `CORE_RE` y `CORE_OK` de `scripts/plan_android.py` vienen de [cleanyourtv](https://github.com/Gathin23/cleanyourtv) (MIT), que la skill también usa para aplicar los cambios en Android.
+- `FACTORY_RE` de `scripts/plan_android.py` viene de [free-my-tv](https://github.com/simbasjungles/free-my-tv) (MIT).
 
 Licencia: MIT, © 2026 Francisco Rivarola.

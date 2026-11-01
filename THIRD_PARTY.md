@@ -1,8 +1,6 @@
 # Material de terceros
 
-Todo lo demás en esta skill (prosa de `SKILL.md` y `references/`, y el código de
-`scripts/`) está escrito desde cero. Lo único copiado de otro proyecto queda listado
-acá, con su origen y licencia.
+Código copiado de otros proyectos, con su origen y licencia.
 
 ## cleanyourtv — regexes del núcleo de Android
 
@@ -23,20 +21,4 @@ acá, con su origen y licencia.
   archivo `app/src/io/freemytv/HomeMode.java`.
 - **Licencia:** MIT, Copyright (c) 2026 Free My TV contributors.
 
-## Idea del monitor honesto
-
-- **Qué:** solo la idea de no mostrar métricas que la tele no expone. **No se copia código.**
-- **Origen:** [pranavsarathi/android-tv-makeover](https://github.com/pranavsarathi/android-tv-makeover).
-- **Licencia:** se toma como idea con crédito; no se reproduce material bajo su
-  licencia.
-
-## Citas en los `references/`
-
-- `paisanos-io/tv-makeover`, `simbasjungles/free-my-tv`,
-  `frxnnk/webos-liquid-glass-launcher`, `danielthejoker18/FreeMyTvWebOS`: **MIT**.
-- `Gathin23/cleanyourtv`: **MIT**.
-- `pranavsarathi/android-tv-makeover`: idea con crédito (arriba).
-- Los `references/` citan archivo y línea de cada dato; no se reproduce texto largo
-  de esos repos.
-
-Los avisos de copyright de arriba acompañan a las licencias MIT de cada proyecto: el texto completo está en el archivo LICENSE de cada repositorio.
+El texto completo de cada licencia MIT está en el archivo LICENSE de su repositorio.
