@@ -22,7 +22,7 @@ Flujo verificado en `simbasjungles_free-my-tv` repo (`CLAUDE.md` líneas 119-136
 |---|---|---|
 | Instalar el launcher como app (`python3 scripts/install.py <IP>` de FreeMyTvWebOS) | **sí** | sí |
 | Que el launcher reemplace al Home de LG | **no** | sí |
-| Deshabilitar/desinstalar bloatware | **no documentado** | no cubierto en esta skill |
+| Deshabilitar/desinstalar bloatware | **no** | ver `references/root-webos.md` |
 | Servicio que relanza el launcher (watchdog) | no | sí |
 | Acceso SSH en puerto 22 / service mode | no | sí |
 

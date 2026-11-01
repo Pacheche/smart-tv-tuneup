@@ -31,7 +31,7 @@ py -I scripts/test_scripts.py
 
 ## Qué NO hace
 
-- No hace root ni ejecuta nada de root (en webOS queda como referencia no ejecutada).
+- No hace root: en webOS incluye una guía con requisitos y riesgos.
 - No reemplaza el Home en LG ni Samsung: allí el launcher se instala como app. En Android sí puede cambiarlo.
 - No deshabilita ni desinstala bloatware en webOS ni en Tizen sin root.
 - No flashea ni hace downgrade, y el factory reset es el último escalón, con aviso previo.
@@ -42,7 +42,7 @@ py -I scripts/test_scripts.py
 |---|---|
 | Android TV / Google TV (sin root) | Identificar, respaldar, planear y aplicar debloat por ADB con cleanyourtv, cambiar el Home, verificar y revertir |
 | LG webOS (sin root) | Instalar launcher como app por Developer Mode; el Home de fábrica se queda |
-| webOS con root | Solo referencia leída, nunca ejecutada |
+| webOS con root | Guía de requisitos y riesgos |
 | Samsung Tizen (sin root) | Instalar launcher como app por Developer Mode/sdb; sin shell ni `pm` en retail |
 | Orsay (Samsung viejo) | No aplica |
 

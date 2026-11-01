@@ -25,7 +25,7 @@ Si piden apurarse o no preguntar, las fases siguen igual: identificar, hacer sol
 ## Ruteo por plataforma
 
 - **Android TV / Google TV (TCL, Hisense, Sony...):** ADB por 5555. `scripts/fetch_cleanyourtv.py`, lista del modelo más parecido, guardas de core y de Wi-Fi. El launcher nuevo pasa a ser el Home; el de fábrica se deshabilita solo tras verificar que otro responde a HOME. Ver `references/android.md`.
-- **LG webOS (sin root):** Developer Mode, SSH 9922 (`prisoner`), huella guardada; launcher como app, sin tocar el Home nativo. Flujo en `references/webos.md`; root solo como guía, nunca ejecutado: `references/root-webos.md`.
+- **LG webOS (sin root):** Developer Mode, SSH 9922 (`prisoner`), huella guardada; launcher como app, sin tocar el Home nativo. Flujo en `references/webos.md`; root: la skill guía y no lo ejecuta, `references/root-webos.md`.
 - **Samsung Tizen (sin root):** sdb 26101 con Developer Mode y certificado (Samsung para 2023+/Tizen 7+, Tizen para 2015-2022). No hay shell `pm`: no existe debloat de paquetes; launcher como app firmada. Ver `references/tizen.md`.
 
 ## Reglas inviolables
