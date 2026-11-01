@@ -1,0 +1,4 @@
+interface:
+  display_name: "Smart TV Tuneup"
+  short_description: "Optimiza cualquier smart TV sin root"
+  default_prompt: "Usá $smart-tv-tuneup para optimizar mi smart TV."

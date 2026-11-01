@@ -1,16 +1,34 @@
 # smart-tv-tuneup
 
-Guía para optimizar cualquier smart TV con tu agente de IA.
+Skill para agentes de IA que optimiza cualquier smart TV.
+
+Instalala y decile a tu agente "optimizá mi tele": la skill le indica cómo identificarla, limpiarla, medir el resultado y dejarla lista para revertir. El agente ejecuta el trabajo y te pide solo lo que hay que hacer en la tele.
 
 ## Instalación
 
-Clonar (o copiar) esta carpeta dentro de la carpeta de skills del agente, por ejemplo en Claude Code:
+```bash
+npx skills add Pacheche/smart-tv-tuneup -g -y
+```
+
+O clonala en la carpeta de skills de tu agente:
+
+| Agente | Carpeta |
+|---|---|
+| Claude Code | `~/.claude/skills/smart-tv-tuneup` |
+| Codex | `~/.codex/skills/smart-tv-tuneup` |
+| Copilot CLI, Gemini CLI | `~/.agents/skills/smart-tv-tuneup` |
 
 ```bash
 git clone https://github.com/Pacheche/smart-tv-tuneup.git ~/.claude/skills/smart-tv-tuneup
 ```
 
-Y listo: el agente la activa solo cuando el pedido trata de una tele lenta, bloatware, launcher o depuración ADB/webOS/Tizen. Sus scripts usan Python 3 sin dependencias; para aplicar en Android, la skill baja cleanyourtv en un commit fijo:
+Si tu agente no carga skills, abrí esta carpeta y pedile que siga `SKILL.md`; `AGENTS.md` ya lo dirige ahí.
+
+## Uso
+
+Pedile al agente, por ejemplo: "Mi tele está lenta, optimizala. La IP es 192.168.1.50". El agente necesita terminal, Python 3, git y estar en la misma red que la tele.
+
+Comandos que usa la skill:
 
 ```bash
 py scripts/detect_tv.py <ip de la tele>

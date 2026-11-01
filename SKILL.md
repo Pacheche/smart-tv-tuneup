@@ -7,7 +7,15 @@ metadata:
 
 # smart-tv-tuneup
 
-Ajuste de televisor inteligente sin root. En Android TV/Google TV se limpia y se puede cambiar el Home; en LG webOS y Samsung Tizen solo se instala un launcher como app, que **no** reemplaza el Home de fábrica. Los cambios de Android se revierten con un registro guardado antes de tocar nada.
+Esta skill es un procedimiento para que ejecutes vos, el agente: no la resumas ni se la pases a la persona como guía. Ajuste de televisor inteligente sin root. En Android TV/Google TV se limpia y se puede cambiar el Home; en LG webOS y Samsung Tizen solo se instala un launcher como app, que **no** reemplaza el Home de fábrica. Los cambios de Android se revierten con un registro guardado antes de tocar nada.
+
+## Cómo aplicarla
+
+- Las rutas son relativas a la carpeta de este `SKILL.md`. Python: `py` en Windows, `python3` en el resto.
+- Corré vos los scripts y comandos. Pedile a la persona solo lo que exige la tele: activar la depuración, aceptar avisos, tocar el control o pasar la IP.
+- Leé `references/` a medida que la necesites: la de la plataforma detectada, `rendimiento.md` para medir y `recuperacion.md` ante cualquier falla.
+- Pedí aprobación antes del primer cambio. Si una regla o un script te frena, parate y explicá por qué: no busques otro camino.
+- Sin terminal o sin acceso a la red de la tele, indicale los pasos a la persona y no des nada por hecho sin que confirme el resultado.
 
 ## Fases (en este orden, sin saltar ninguna)
 
@@ -27,6 +35,8 @@ Si piden apurarse o no preguntar, las fases siguen igual: identificar, hacer sol
 - **Android TV / Google TV (TCL, Hisense, Sony...):** ADB por 5555. `scripts/fetch_cleanyourtv.py`, lista del modelo más parecido, guardas de core y de Wi-Fi. El launcher nuevo pasa a ser el Home; el de fábrica se deshabilita solo tras verificar que otro responde a HOME. Ver `references/android.md`.
 - **LG webOS (sin root):** Developer Mode, SSH 9922 (`prisoner`), huella guardada; launcher como app, sin tocar el Home nativo. Flujo en `references/webos.md`; root: la skill guía y no lo ejecuta, `references/root-webos.md`.
 - **Samsung Tizen (sin root):** sdb 26101 con Developer Mode y certificado (Samsung para 2023+/Tizen 7+, Tizen para 2015-2022). No hay shell `pm`: no existe debloat de paquetes; launcher como app firmada. Ver `references/tizen.md`.
+
+- **Otra plataforma (Fire TV, Roku, VIDAA...):** si la persona ya la nombró, no hace falta IP ni sonda; explicá que esta skill no la cubre y no cambies nada. No adaptes comandos de otra plataforma.
 
 ## Reglas inviolables
 
