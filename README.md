@@ -1,6 +1,6 @@
 # smart-tv-tuneup
 
-Skill para agentes de IA que optimiza cualquier smart TV.
+Skill para agentes de IA que optimiza smart TVs con Android TV, Google TV, LG webOS o Samsung Tizen.
 
 Instalala y decile a tu agente "optimizá mi tele": la skill le indica cómo identificarla, limpiarla, medir el resultado y dejarla lista para revertir. El agente ejecuta el trabajo y te pide solo lo que hay que hacer en la tele.
 
@@ -41,11 +41,11 @@ py -I scripts/test_scripts.py
 
 ## Qué hace
 
-- Identifica la tele **sin escribir nada** (sondeo TCP de solo lectura) y pide modelo, firmware y versión antes de cualquier cambio.
-- Pregunta qué apps usa la persona y **respalda el estado base** (paquetes, quién responde a HOME, escalas, métricas).
-- Muestra el plan **sin tocar nada**; recién después aplica en lotes chicos, un comando por llamada, verificando tras cada lote.
-- Aplica `pm disable-user --user 0` **nunca** `pm uninstall`, y espera ≥ 45 s antes de reiniciar.
-- Mide antes y después con modelo, contexto y unidad, cierra ADB al terminar y entrega el informe con **cómo revertir cada cosa**.
+- Identifica la tele sin escribir nada (sondeo TCP de solo lectura) y pide modelo, firmware y versión antes de cualquier cambio.
+- Pregunta qué apps usa la persona y respalda el estado base (paquetes, quién responde a HOME, escalas, métricas).
+- Muestra el plan sin tocar nada; recién después aplica en lotes chicos, un comando por llamada, verificando tras cada lote.
+- Aplica `pm disable-user --user 0`, **nunca** `pm uninstall`, y espera ≥ 45 s antes de reiniciar.
+- Mide antes y después con modelo, contexto y unidad, cierra ADB al terminar y entrega el informe con cómo revertir cada cosa.
 
 ## Qué NO hace
 

@@ -1,4 +1,4 @@
-# Samsung Tizen — qué se puede hacer sin root
+# Samsung Tizen: qué se puede hacer sin root
 
 **Regla:** en Tizen retail **no hay ADB, no hay shell y no hay `pm disable-user`**. No se puede deshabilitar ni desinstalar bloatware de fábrica. Lo único es instalar apps (si el firmware lo permite) o usar el launcher como app. `sdb` en un firmware retail **solo admite archivos** (`filesync_support:push`), no comandos. (`Gathin23_cleanyourtv` repo, `docs/devices/samsung-tizen.md` líneas 43 y 106, y `tests/test_samsung_tizen_note.py`; `simbasjungles_free-my-tv` repo, `CLAUDE.md` línea 190.)
 

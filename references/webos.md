@@ -1,4 +1,4 @@
-# LG webOS — qué se puede hacer sin root
+# LG webOS: qué se puede hacer sin root
 
 **Regla:** ninguna de las fuentes revisadas documenta un `pm disable` ni un deshabilitado de bloatware en webOS. Lo único verificado sin root es **instalar el launcher como app**, y esa app **no reemplaza el Home de LG**. Decirlo así al usuario; no prometer debloat webOS.
 

@@ -2,7 +2,7 @@
 
 Código copiado de otros proyectos, con su origen y licencia.
 
-## cleanyourtv — regexes del núcleo de Android
+## cleanyourtv: regexes del núcleo de Android
 
 - **Qué:** las constantes `CORE_RE` y `CORE_OK` de `scripts/plan_android.py` están
   copiadas **literales**, incluida la anotación de origen en el comentario.
@@ -14,7 +14,7 @@ Código copiado de otros proyectos, con su origen y licencia.
   mío; si cleanyourtv corrige sus regexes, hay que volver a verificarlas contra ese
   commit antes de cambiarlas acá.
 
-## free-my-tv — patrón de menús de fábrica
+## free-my-tv: patrón de menús de fábrica
 
 - **Qué:** `FACTORY_RE` de `scripts/plan_android.py`, tomado del patrón `FACTORY`.
 - **Origen:** [simbasjungles/free-my-tv](https://github.com/simbasjungles/free-my-tv),

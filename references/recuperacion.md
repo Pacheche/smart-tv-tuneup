@@ -1,11 +1,11 @@
-# Recuperación — orden estricta, sin saltos
+# Recuperación: orden estricto, sin saltos
 
 **Regla:** nunca saltar a factory reset. Seguir la escalera en orden; flashear queda fuera de esta skill. Todo lo que se cambia en Android con esta skill es **reversible con `pm enable`** porque nunca se usa `pm uninstall` (`Gathin23_cleanyourtv`, `docs/DOS-AND-DONTS.md` líneas 19-23).
 
 ## 0. Prevención (antes de tocar nada)
 
 - Guardar la **lista aplicada** y el **registro** que hace el script antes de cambiar nada: en `~/.cleanyourtv/`, un archivo por tele y por lista, con el estado de cada paquete, **quién era dueño de Home** y las tres escalas de animación (`docs/restore.md` líneas 24-30).
-- Si no hay registro, el restore habilita la lista entera y pone las escalas en `1.0` (líneas 59-60) — por eso el registro importa.
+- Si no hay registro, el restore habilita la lista entera y pone las escalas en `1.0` (líneas 59-60). Por eso el registro importa.
 - Nunca deshabilitar el **único** launcher sin tener otro que responda a HOME (casos de bootloop verificados abajo).
 
 ## 1. La escalera de recuperación (en este orden)
@@ -15,13 +15,13 @@ Fuente: `Gathin23_cleanyourtv`, `docs/TROUBLESHOOTING.md` líneas 679-689 y `doc
 1. **Esperar diez minutos** una vez (muchos "bootloops" son arranques lentos).
 2. **Arranque en frío:** apagar del enchufe, esperar, encender. Repetir la medición.
 3. **Mando del teléfono o ratón/teclado USB** para recuperar navegación si el mando no responde (casos documentados con mouse USB: `docs/devices/hisense-65d62qh.md`).
-4. **Modo seguro:** mantener Power durante la animación de arranque (en muchas teles) — desactiva apps añadidas.
+4. **Modo seguro:** mantener Power durante la animación de arranque (en muchas teles); desactiva las apps añadidas.
 5. **Ajustes > Apps > mostrar apps del sistema > habilitar** el launcher/paquete en cuestión (o `pm enable <pkg>` si ADB responde).
 6. **Recuperar la red:** si la Wi-Fi guardada era de setupwraith, reconectar no alcanza: olvidar la red y unirla de nuevo desde la tele, con control o teclado USB (`TROUBLESHOOTING.md` 633-643). Otra opción: un hotspot con el **mismo nombre y contraseña** de la red vieja. Después, reactivar la depuración si se apagó.
 7. **Reintentar ADB** justo después de encender (`adb connect <ip>:5555` durante un par de minutos).
 8. **`tools/restore.sh <lista>`** (o `restore.ps1` en Windows) con el registro: es el camino normal en cuanto ADB responde (`docs/restore.md` líneas 5-20).
 9. **Borrar partición de caché** desde el menú de recuperación.
-10. **Factory reset desde el menú de recuperación — ÚLTIMO RECURSO.** Avisar antes que cierra todas las sesiones.
+10. **Factory reset desde el menú de recuperación, como último recurso.** Avisar antes que cierra todas las sesiones.
 
 ## 2. Qué implica el factory reset (decirlo antes de hacerlo)
 
@@ -54,7 +54,7 @@ Fuente: `Gathin23_cleanyourtv`, `docs/TROUBLESHOOTING.md` líneas 679-689 y `doc
 - **≥45 s de espera antes de reiniciar** tras deshabilitar (los docs de cleanyourtv dicen ~15 s: `PROMPT.md` línea 116 y `TROUBLESHOOTING.md` línea 963; en `examples/tcl-40s5400a/debloat.txt` líneas 67-68, `adb reboot` "a few seconds" después del último lote **devolvió el lote entero**, y repetir con **60 s** de espera lo dejó todo deshabilitado; en `examples/xiaomi-mitv-aesp0/debloat.txt` línea 49 ni `sync` ni 15 s bastaron; en `examples/sony-bravia-bf1/debloat.txt` línea 15 recomiendan ~30 s; en una **TCL BeyondTV real** se perdió un lote al reiniciar enseguida: experiencia de un equipo). Usar 45 s como mínimo y más si la tele es lenta.
 - Nunca `pm uninstall`; nunca `pm clear` sobre un launcher.
 - No tocar `TV_INPUT_HARDWARE`, `TV_INPUT_BUTTON`, `CONNECT_INPUT`, paquetes core ni menús de fábrica (`DOS-AND-DONTS.md` línea 45).
-- Antes de deshabilitar `setupwraith`: `dumpsys wifi | grep -o 'cname=[^ ]*'` — si es el dueño de la Wi-Fi guardada, primero olvidar y volver a unir la red (`TROUBLESHOOTING.md` 633-643).
+- Antes de deshabilitar `setupwraith`: `dumpsys wifi | grep -o 'cname=[^ ]*'`. Si es el dueño de la Wi-Fi guardada, primero olvidar y volver a unir la red (`TROUBLESHOOTING.md` 633-643).
 
 ## Fuentes
 

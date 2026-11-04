@@ -1,4 +1,4 @@
-# Rendimiento — qué se puede prometer y con qué evidencia
+# Rendimiento: qué se puede prometer y con qué evidencia
 
 **Regla:** toda cifra se cita con su **contexto, modelo y unidad**. Un número medido en una tele no vale para otra. Si no hay medición antes/después en la tele del usuario, no se promete mejora.
 
@@ -33,7 +33,7 @@
 
 1. **Reposo de la tele** (sin apps abiertas): CPU y memoria libres (`dumpsys cpuinfo`, `dumpsys meminfo`).
 2. **Arranque en frío** con cronómetro: apagar, encender, cronómetro hasta el Home usable.
-3. **Tres acciones del usuario**: abrir YouTube, cambiar de app, volver al Home — cronómetro en cada una.
+3. **Tres acciones del usuario**: abrir YouTube, cambiar de app, volver al Home, con cronómetro en cada una.
 4. Registrar también **modelo, firmware, Android/Tizen/webOS y banda Wi-Fi**.
 
 Comparar con el método de referencia de cleanyourtv (`docs/workflows/perf-ab.md`): si dos corridas del mismo build varían hasta 45 ms en arranque, una mejora menor que eso **no es mejora**.

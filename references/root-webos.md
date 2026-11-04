@@ -10,9 +10,9 @@ Fuente: `frxnnk_webos-liquid-glass-launcher` repo, `docs/root-automation.md` (MI
 - El plan dura **cinco minutos**, se consume **una sola vez** y se vuelve a comprobar antes de aplicarlo; los pasos de preparación no rootéan (líneas 47-48). Requiere **Python 3.8+**.
 - Fija fuentes de SlopBro y HBC **por commit y SHA-256**, y el IPK de HBC **0.7.3** por SHA-256 (línea 22; hash del IPK en línea 131).
 - **No descarga ni ejecuta el `autoroot.sh` upstream** (línea 28); incluye su `COPYING` de **AGPL-3.0-or-later** por ser una derivación.
-- Si algo queda incierto: conserva, registra recuperación y devuelve resultado **parcial con arranque físico pendiente** — "no reinicia la TV para fabricar esa confirmación" (líneas 39-45).
+- Si algo queda incierto: conserva, registra recuperación y devuelve resultado **parcial con arranque físico pendiente**: "no reinicia la TV para fabricar esa confirmación" (líneas 39-45).
 - Paradas de seguridad: `DEVMODE_TOKEN_INVALID` (token convertido en directorio) y `SIGNED_BACKUP_REQUIRED` (falta backup verificable del script original) (líneas 60-61).
-- Hash del script stock observado en esa unidad: `18b6b7cce77d640fef78d9d247d6fc672b0850bd728dd2a3c44105a485abc846` (línea 66) — **solo sirve para esa unidad**.
+- Hash del script stock observado en esa unidad: `18b6b7cce77d640fef78d9d247d6fc672b0850bd728dd2a3c44105a485abc846` (línea 66). Solo sirve para esa unidad.
 
 ## 2. Riesgos verificados (por qué esta skill no lo hace)
 
@@ -38,4 +38,4 @@ De `frxnnk_webos-liquid-glass-launcher`, `docs/root-and-home.md`:
 ## Fuentes
 
 - `frxnnk_webos-liquid-glass-launcher` (MIT): `docs/root-automation.md`, `docs/root-and-home.md`, `docs/local-installer.md`, `README.md`.
-- Las guías de root de webOS Homebrew Channel están en `github.com/webosbrew` — remitir ahí; esta skill no las reproduce ni las ejecuta.
+- Las guías de root de webOS Homebrew Channel están en `github.com/webosbrew`: remitir ahí; esta skill no las reproduce ni las ejecuta.
