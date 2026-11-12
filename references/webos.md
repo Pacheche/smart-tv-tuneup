@@ -1,55 +1,55 @@
-# LG webOS: qué se puede hacer sin root
+# LG webOS: what you can do without root
 
-**Regla:** ninguna de las fuentes revisadas documenta un `pm disable` ni un deshabilitado de bloatware en webOS. Lo único verificado sin root es **instalar el launcher como app**, y esa app **no reemplaza el Home de LG**. Decirlo así al usuario; no prometer debloat webOS.
+**Rule:** none of the reviewed sources documents a `pm disable` or a bloatware disable on webOS. The only thing verified without root is **installing the launcher as an app**, and that app **does not replace the LG Home**. Say it that way to the user; do not promise webOS debloat.
 
-## 1. Entrada sin root: Developer Mode + Key Server
+## 1. Entry without root: Developer Mode + Key Server
 
-Antes de nada, pedir modelo y versión de webOS desde la pantalla de información de la tele, con una foto si hace falta.
+First of all, ask for the model and webOS version from the TV's information screen, with a photo if needed.
 
-Flujo verificado en `simbasjungles_free-my-tv` repo (`CLAUDE.md` líneas 119-136, `webos/install.py`):
+Flow verified in the `simbasjungles_free-my-tv` repo (`CLAUDE.md` lines 119-136, `webos/install.py`):
 
-1. Pedir la **IP de la tele** (y la ciudad, si se va a usar contenido con API).
-2. En la tele (lo hace el usuario): LG Content Store → **Developer Mode** → entrar con cuenta LG developer gratis (`webostv.developer.lge.com`) → **Dev Mode Status ON** (la tele se reinicia) → **Key Server ON**. Muestra IP y una **passphrase de 6 caracteres** (longitud confirmada en `danielthejoker18_FreeMyTvWebOS` repo, `scripts/install.py` línea 86 y `README.md` línea 289).
-3. El instalador baja la clave privada cifrada del Key Server de la tele: `http://<IP>:9991/webos_rsa` (`danielthejoker18_FreeMyTvWebOS`, `scripts/install.py` líneas 88-90). Va por HTTP sin cifrar: con Key Server encendido, cualquiera en la Wi-Fi que tenga la passphrase puede bajarla, así que se apaga al terminar (su `README.md` líneas 88-89).
-4. SSH al puerto **9922**, usuario **`prisoner`**. Developer Mode dura **~40 días**; el botón **EXTEND** de la app lo renueva. **Si vence, la tele borra las apps de desarrollador** (`CLAUDE.md` línea 135).
-5. La passphrase se teclea **en la terminal del usuario, no en el chat**; la clave desbloqueada queda en `~/.ssh/freemytv_webos_<IP>` (`webos/install.py` docstring).
+1. Ask for the **TV IP** (and the city, if API content is going to be used).
+2. On the TV (the user does it): LG Content Store → **Developer Mode** → sign in with a free LG developer account (`webostv.developer.lge.com`) → **Dev Mode Status ON** (the TV reboots) → **Key Server ON**. It shows the IP and a **6-character passphrase** (length confirmed in the `danielthejoker18_FreeMyTvWebOS` repo, `scripts/install.py` line 86 and `README.md` line 289).
+3. The installer downloads the encrypted private key from the TV's Key Server: `http://<IP>:9991/webos_rsa` (`danielthejoker18_FreeMyTvWebOS`, `scripts/install.py` lines 88-90). It goes over unencrypted HTTP: with Key Server on, anyone on the Wi-Fi who has the passphrase can download it, so turn it off when done (its `README.md` lines 88-89).
+4. SSH on port **9922**, user **`prisoner`**. Developer Mode lasts **~40 days**; the app's **EXTEND** button renews it. **If it expires, the TV erases the developer apps** (`CLAUDE.md` line 135).
+5. The passphrase is typed **in the user's terminal, not in the chat**; the unlocked key stays in `~/.ssh/freemytv_webos_<IP>` (`webos/install.py` docstring).
 
-**Huella del host:** la primera conexión guarda la huella y las siguientes la exigen. Usar `danielthejoker18_FreeMyTvWebOS/scripts/install.py` (`accept-new` con `known_hosts` propio, línea 135): aborta si la huella cambia en esa IP, pero confía en el primer contacto, así que se hace solo en la red de casa. `simbasjungles_free-my-tv/webos/install.py` usa `StrictHostKeyChecking=no` y descarta `known_hosts` (línea 35): **no correrlo sin cambiar esas opciones**. frxnnk usa `StrictHostKeyChecking=yes` con huella ya aceptada (`installer/transport.cjs`).
+**Host fingerprint:** the first connection saves the fingerprint and the following ones require it. Use `danielthejoker18_FreeMyTvWebOS/scripts/install.py` (`accept-new` with its own `known_hosts`, line 135): it aborts if the fingerprint changes on that IP, but it trusts the first contact, so do it only on the home network. `simbasjungles_free-my-tv/webos/install.py` uses `StrictHostKeyChecking=no` and discards `known_hosts` (line 35): **do not run it without changing those options**. frxnnk uses `StrictHostKeyChecking=yes` with an already accepted fingerprint (`installer/transport.cjs`).
 
-## 2. Qué se puede hacer sin root
+## 2. What you can do without root
 
-| Acción | Sin root | Con root |
+| Action | Without root | With root |
 |---|---|---|
-| Instalar el launcher como app (`python3 scripts/install.py <IP>` de FreeMyTvWebOS) | **sí** | sí |
-| Que el launcher reemplace al Home de LG | **no** | sí |
-| Deshabilitar/desinstalar bloatware | **no** | ver `references/root-webos.md` |
-| Servicio que relanza el launcher (watchdog) | no | sí |
-| Acceso SSH en puerto 22 / service mode | no | sí |
+| Install the launcher as an app (`python3 scripts/install.py <IP>` from FreeMyTvWebOS) | **yes** | yes |
+| Make the launcher replace the LG Home | **no** | yes |
+| Disable/uninstall bloatware | **no** | see `references/root-webos.md` |
+| Service that relaunches the launcher (watchdog) | no | yes |
+| SSH access on port 22 / service mode | no | yes |
 
-Evidencia: "It installs through LG's own Developer Mode, with nothing rooted or changed on the TV. LG's home screen stays where it is" (`simbasjungles_free-my-tv`, `README.md` línea 108, y `docs/webos/full_description.html`). "Instalar y optimizar requiere root comprobado" (`frxnnk_webos-liquid-glass-launcher`, `docs/local-installer.md` línea 11). Sin root, la app de frxnnk "se abre a mano en cada arranque y el Home del sistema toma el control al pulsar Inicio" (su `docs/home-takeover.md`).
+Evidence: "It installs through LG's own Developer Mode, with nothing rooted or changed on the TV. LG's home screen stays where it is" (`simbasjungles_free-my-tv`, `README.md` line 108, and `docs/webos/full_description.html`). "Installing and optimizing requires verified root" (`frxnnk_webos-liquid-glass-launcher`, `docs/local-installer.md` line 11). Without root, frxnnk's app "opens by hand on every boot and the system Home takes over when you press Home" (its `docs/home-takeover.md`).
 
-**Implicación honesta:** en webOS sin root, el usuario obtiene un launcher que abre con un atajo (tecla numérica en el mando o la lista de apps de LG) pero **Inicio sigue mostrando el Home de fábrica**. Preguntar si eso le sirve antes de seguir.
+**Honest implication:** on webOS without root, the user gets a launcher that opens with a shortcut (a number key on the remote or the LG app list) but **Home still shows the factory Home**. Ask whether that works for them before continuing.
 
-## 3. Detalles prácticos verificados
+## 3. Verified practical details
 
-- El primer `install.py` debe correrlo **el usuario en su terminal** (no puede responder al prompt desde el chat del agente) (`CLAUDE.md` línea 127).
-- `--uninstall` del instalador de free-my-tv borra la app (`CLAUDE.md` línea 136); el de FreeMyTvWebOS no trae desinstalación: se quita desde la lista de apps de LG.
-- Los launchers de terceros consultan servicios externos: FreeMyTvWebOS usa Open-Meteo, ipapi.co (ve tu IP), TMDB y TVMaze. Avisarlo antes de instalar. Su "60 FPS" no tiene medición en el repo: no repetirlo.
-- Al cerrar: apagar Key Server. No apagar Developer Mode si el launcher debe quedar: al vencer o apagarse, la tele borra esas apps.
-- En TVs no 4K, el build cambia la resolución a 1280x720; en webOS 3 (2019 HD) una app 1920x1080 salía en un tercio de la pantalla (#402) (`CLAUDE.md` líneas 130-133).
-- webOS 3: `listLaunchPoints` denegado → estante vacío; hay flujo aparte con `python3 webos/apps.py` (`CLAUDE.md` línea 137).
-- Una TV 2024 resetea conexiones planas en el puerto **3000** → usar TLS en **3001** (#355/#357) (`CLAUDE.md` línea 141).
-- Watchdog verificado: "un watchdog en proceso aparte vuelve al Home de fábrica tras **tres caídas en cinco minutos**, y un *boot check* conserva la elección tras actualizaciones" (`simbasjungles_free-my-tv`, `README.md` línea 315). **No hay cifra de "3 s" ni de "fallback a 45 s" en las fuentes: no afirmarla.**
+- The first `install.py` must be run by **the user in their terminal** (it cannot answer the prompt from the agent chat) (`CLAUDE.md` line 127).
+- `--uninstall` from the free-my-tv installer erases the app (`CLAUDE.md` line 136); the FreeMyTvWebOS one has no uninstall: it is removed from the LG app list.
+- Third-party launchers query external services: FreeMyTvWebOS uses Open-Meteo, ipapi.co (sees your IP), TMDB and TVMaze. Warn before installing. Its "60 FPS" has no measurement in the repo: do not repeat it.
+- When closing: turn Key Server off. Do not turn Developer Mode off if the launcher must remain: when it expires or is turned off, the TV erases those apps.
+- On non-4K TVs, the build changes the resolution to 1280x720; on webOS 3 (2019 HD) a 1920x1080 app came out on a third of the screen (#402) (`CLAUDE.md` lines 130-133).
+- webOS 3: `listLaunchPoints` denied → empty shelf; there is a separate flow with `python3 webos/apps.py` (`CLAUDE.md` line 137).
+- A 2024 TV resets plain connections on port **3000** → use TLS on **3001** (#355/#357) (`CLAUDE.md` line 141).
+- Verified watchdog: "a watchdog in a separate process returns to the factory Home after **three crashes in five minutes**, and a *boot check* keeps the choice after updates" (`simbasjungles_free-my-tv`, `README.md` line 315). **There is no "3 s" or "fallback to 45 s" figure in the sources: do not claim it.**
 
-## 4. Qué NO hacer
+## 4. What NOT to do
 
-- No decir "se puede deshabilitar bloatware en webOS sin root": no está documentado.
-- No copiar `StrictHostKeyChecking=no`.
-- No dejar la passphrase ni la clave privada en el repo ni en el chat.
-- No tocar root en esta skill: ver `references/root-webos.md`.
-- No prometer que el launcher reemplaza el Home sin root: es falso.
+- Do not say "you can disable bloatware on webOS without root": it is not documented.
+- Do not copy `StrictHostKeyChecking=no`.
+- Do not leave the passphrase or the private key in the repo or in the chat.
+- Do not touch root in this skill: see `references/root-webos.md`.
+- Do not promise the launcher replaces the Home without root: it is false.
 
-## Fuentes
+## Sources
 
 - `simbasjungles_free-my-tv`: `webos/install.py`, `CLAUDE.md`, `README.md`, `docs/webos/full_description.html` (MIT).
 - `frxnnk_webos-liquid-glass-launcher`: `docs/local-installer.md`, `docs/home-takeover.md`, `installer/transport.cjs` (MIT).

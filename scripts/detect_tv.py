@@ -1,127 +1,127 @@
 #!/usr/bin/env python3
-"""Detecta de qué plataforma es una tele por puertos TCP, sin escribir nada en ella.
+"""Detect which platform a TV is, by TCP ports, without writing anything to it.
 
     py scripts/detect_tv.py <ip> [--timeout 2]
 
-Solo abre y cierra conexiones y lee lo que la propia tele manda sin que nadie le pida
-nada (cero bytes enviados):
+It only opens and closes connections and reads what the TV itself sends without anyone
+asking (zero bytes sent):
 
-    5555   ADB de red (Android / Google TV)
-    9922   SSH de Developer Mode (LG webOS)
-    3000   SSR de LG (SSAP)
-    3001   SSR de LG con TLS (SSAP)
-    26101  sdb de Samsung Tizen (solo con Developer Mode activo)
-    8001   API remota Samsung (websocket)
-    8002   API remota Samsung (alternativa)
+    5555   Network ADB (Android / Google TV)
+    9922   Developer Mode SSH (LG webOS)
+    3000   LG SSR (SSAP)
+    3001   LG SSR with TLS (SSAP)
+    26101  Samsung Tizen sdb (only with Developer Mode on)
+    8001   Samsung remote API (websocket)
+    8002   Samsung remote API (alternate)
 
-Imprime puerto por puerto y una conclusión con nivel de certeza: alta (>= 3 puntos),
-media (2) o baja (1). Con la tele desconocida o los puertos cerrados dice "desconocida"
-y no inventa plataforma. No reemplaza identificar modelo y firmware a mano:
-ver references/android.md, webos.md y tizen.md.
+It prints port by port and a conclusion with a confidence level: high (>= 3 points),
+medium (2) or low (1). With an unknown TV or closed ports it says "unknown"
+and does not invent a platform. It does not replace identifying model and firmware by hand:
+see references/android.md, webos.md and tizen.md.
 """
 import argparse
 import socket
 import sys
 
-# (puerto, qué es, plataforma, peso). El peso es solo para ordenar la conclusión:
-# 2 = puerto característico de la plataforma, 1 = puerto que solo suma contexto.
-PUERTOS = (
-    (5555, "ADB de red (Android / Google TV)", "Android / Google TV", 2),
-    (9922, "SSH de Developer Mode (LG webOS)", "LG webOS", 2),
-    (3000, "SSR de LG (SSAP)", "LG webOS", 1),
-    (3001, "SSR de LG con TLS (SSAP)", "LG webOS", 1),
-    (26101, "sdb de Samsung Tizen (Developer Mode)", "Samsung Tizen", 2),
-    (8001, "API remota Samsung (websocket)", "Samsung Tizen", 1),
-    (8002, "API remota Samsung (alternativa)", "Samsung Tizen", 1),
+# (port, what it is, platform, weight). The weight is only to order the conclusion:
+# 2 = characteristic port of the platform, 1 = port that only adds context.
+PORTS = (
+    (5555, "Network ADB (Android / Google TV)", "Android / Google TV", 2),
+    (9922, "Developer Mode SSH (LG webOS)", "LG webOS", 2),
+    (3000, "LG SSR (SSAP)", "LG webOS", 1),
+    (3001, "LG SSR with TLS (SSAP)", "LG webOS", 1),
+    (26101, "Samsung Tizen sdb (Developer Mode)", "Samsung Tizen", 2),
+    (8001, "Samsung remote API (websocket)", "Samsung Tizen", 1),
+    (8002, "Samsung remote API (alternate)", "Samsung Tizen", 1),
 )
 
-SIGUIENTE = {
-    "Android / Google TV": "pedir modelo exacto, firmware y versión de Android (references/android.md)",
-    "LG webOS": "Developer Mode + Key Server en la tele (references/webos.md)",
-    "Samsung Tizen": "Developer Mode y sdb en el puerto 26101 (references/tizen.md)",
+NEXT_STEP = {
+    "Android / Google TV": "ask for the exact model, firmware and Android version (references/android.md)",
+    "LG webOS": "Developer Mode + Key Server on the TV (references/webos.md)",
+    "Samsung Tizen": "Developer Mode and sdb on port 26101 (references/tizen.md)",
 }
 
 
-def leer_banner(sock, timeout=0.6):
-    """Lee sin enviar nada lo que la tele manda al conectar; devuelve texto o None."""
+def read_banner(sock, timeout=0.6):
+    """Read what the TV sends on connect without sending anything; return text or None."""
     try:
         sock.settimeout(timeout)
-        dato = sock.recv(200)
+        data = sock.recv(200)
     except (socket.timeout, OSError):
         return None
-    if not dato:
+    if not data:
         return None
-    return dato.decode("utf-8", "replace").strip()
+    return data.decode("utf-8", "replace").strip()
 
 
-def sondear(host, puerto, timeout):
-    """Conecta y cierra. Devuelve (estado, banner). No escribe un solo byte."""
+def probe(host, port, timeout):
+    """Connect and close. Return (state, banner). Do not write a single byte."""
     try:
-        with socket.create_connection((host, puerto), timeout=timeout) as sock:
-            banner = leer_banner(sock)
+        with socket.create_connection((host, port), timeout=timeout) as sock:
+            banner = read_banner(sock)
     except ConnectionRefusedError:
-        return "cerrado", None
+        return "closed", None
     except socket.timeout:
-        return "sin respuesta", None
+        return "no response", None
     except OSError as e:
-        return "sin datos (%s)" % e.__class__.__name__, None
-    return "abierto", banner
+        return "no data (%s)" % e.__class__.__name__, None
+    return "open", banner
 
 
-def puntuar(abiertos):
-    """Suma los pesos por plataforma. `abiertos` es una lista de (plataforma, peso)."""
-    puntos = {}
-    for plataforma, peso in abiertos:
-        puntos[plataforma] = puntos.get(plataforma, 0) + peso
-    return puntos
+def score(open_ports):
+    """Sum the weights per platform. `open_ports` is a list of (platform, weight)."""
+    points = {}
+    for platform, weight in open_ports:
+        points[platform] = points.get(platform, 0) + weight
+    return points
 
 
-def concluir(puntos):
-    """Devuelve (plataforma, certeza) a partir de los puntos por plataforma."""
-    if not puntos:
-        return "desconocida", "sin puertos característicos"
-    mayor = max(puntos.values())
-    cimas = sorted(p for p, v in puntos.items() if v == mayor)
-    if len(cimas) > 1:
-        return "ambigua entre %s" % " y ".join(cimas), "media"
-    if mayor >= 3:
-        return cimas[0], "alta"
-    if mayor == 2:
-        return cimas[0], "media"
-    return cimas[0], "baja"
+def conclude(points):
+    """Return (platform, confidence) from the points per platform."""
+    if not points:
+        return "unknown", "no characteristic ports"
+    top = max(points.values())
+    peaks = sorted(p for p, v in points.items() if v == top)
+    if len(peaks) > 1:
+        return "ambiguous between %s" % " and ".join(peaks), "medium"
+    if top >= 3:
+        return peaks[0], "high"
+    if top == 2:
+        return peaks[0], "medium"
+    return peaks[0], "low"
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Detecta la plataforma de una tele por puertos TCP, sin enviar nada.",
+        description="Detect a TV platform by TCP ports, without sending anything.",
         add_help=True,
     )
-    parser.add_argument("ip", help="IP de la tele en la red local")
+    parser.add_argument("ip", help="IP of the TV on the local network")
     parser.add_argument("--timeout", type=float, default=2.0,
-                        help="segundos de espera por puerto (por defecto 2)")
+                        help="seconds to wait per port (default 2)")
     args = parser.parse_args(argv)
 
-    abiertos = []
-    print("Sondeando %s (solo lectura, cero bytes enviados):" % args.ip)
-    for puerto, que_es, plataforma, peso in PUERTOS:
-        estado, banner = sondear(args.ip, puerto, args.timeout)
-        linea = "  %-6s %-11s %s" % (puerto, estado, que_es)
+    open_ports = []
+    print("Probing %s (read-only, zero bytes sent):" % args.ip)
+    for port, what, platform, weight in PORTS:
+        state, banner = probe(args.ip, port, args.timeout)
+        line = "  %-6s %-11s %s" % (port, state, what)
         if banner:
-            linea += "  [banner: %s]" % banner.splitlines()[0][:60]
-        print(linea)
-        if estado == "abierto":
-            abiertos.append((plataforma, peso))
+            line += "  [banner: %s]" % banner.splitlines()[0][:60]
+        print(line)
+        if state == "open":
+            open_ports.append((platform, weight))
 
-    plataforma, certeza = concluir(puntuar(abiertos))
+    platform, confidence = conclude(score(open_ports))
     print()
-    print("Plataforma probable: %s — certeza %s" % (plataforma, certeza))
-    if plataforma in SIGUIENTE:
-        print("Siguiente paso: %s." % SIGUIENTE[plataforma])
-    print("Un puerto abierto no identifica la tele: confirmar modelo y firmware antes de "
-          "cualquier cambio.")
-    if not abiertos:
-        print("Ningún puerto característico respondió: la tele puede estar apagada, "
-              "en otro VLAN o sin depuración activada. Esto no dice nada sobre su estado.")
+    print("Likely platform: %s - confidence %s" % (platform, confidence))
+    if platform in NEXT_STEP:
+        print("Next step: %s." % NEXT_STEP[platform])
+    print("An open port does not identify the TV: confirm model and firmware before "
+          "any change.")
+    if not open_ports:
+        print("No characteristic port answered: the TV may be off, on another VLAN or "
+              "with debugging disabled. This says nothing about its state.")
     return 0
 
 

@@ -1,79 +1,79 @@
-# Android TV / Google TV: flujo completo
+# Android TV / Google TV: full flow
 
-Toda la parte Android es sin root y sin `uninstall`. Si un paso no puede hacerse, se para y se avisa; no se salta.
+The whole Android part is without root and without `uninstall`. If a step cannot be done, stop and say so; do not skip it.
 
-## 1. Identificar (solo lectura)
+## 1. Identify (read-only)
 
-- Modelo, marca, firmware y fingerprint: `getprop ro.product.model`, `ro.build.fingerprint`, `ro.board.platform`, `ro.build.version.release`.
-- Puertos: 5555 (ADB de red). Si está cerrado: falta USB debugging, o la tele solo ofrece Wireless debugging (Google TV) → `adb pair` con el código de Desarrollador > Depuración inalámbrica, luego `adb connect`, `adb tcpip 5555`.
-- La primera autorización sin "Permitir siempre" vale solo para esa conexión: pedir en la tele "Permitir siempre" y reintentar una vez (sin eso, la siguiente llamada se cuelga ~120 s).
-- Si la tele no responde tras un reinicio: en TCL Android TV el 5555 vuelve a abrir ~25 s después del arranque, antes de `sys.boot_completed`; esperar a `getprop sys.boot_completed` antes de medir nada.
-- Buscar el perfil del modelo más parecido en los ejemplos de cleanyourtv (marca, modelo, chip como rtd2851/mt9221/s905x4, Android, nombre de plataforma como BeyondTV/PatchWall) y leer su cabecera antes de decidir.
+- Model, brand, firmware and fingerprint: `getprop ro.product.model`, `ro.build.fingerprint`, `ro.board.platform`, `ro.build.version.release`.
+- Ports: 5555 (network ADB). If it is closed: USB debugging is missing, or the TV only offers Wireless debugging (Google TV) → `adb pair` with the code from Developer > Wireless debugging, then `adb connect`, `adb tcpip 5555`.
+- The first authorization without "Allow always" only holds for that connection: ask for "Allow always" on the TV and retry once (without it, the next call hangs ~120 s).
+- If the TV does not respond after a reboot: on TCL Android TV port 5555 reopens ~25 s after boot, before `sys.boot_completed`; wait for `getprop sys.boot_completed` before measuring anything.
+- Look for the profile of the closest model in the cleanyourtv examples (brand, model, chip such as rtd2851/mt9221/s905x4, Android, platform name such as BeyondTV/PatchWall) and read its header before deciding.
 
-## 2. Preguntar apps (antes de tocar nada)
+## 2. Ask about apps (before touching anything)
 
-Lista de preguntas con recomendación, nunca "apago lo que suene a basura": apps que usa de verdad (agrupadas), los cuatro apps del dock en orden, asistente de voz (recomendar apagar si come CPU), Chromecast, reproductor USB, salvapantallas, actualizaciones de firmware (por defecto mantener), DNS privado opcional (no bloquea anuncios de YouTube).
+A list of questions with a recommendation, never "I turn off whatever sounds like junk": apps they really use (grouped), the four dock apps in order, voice assistant (recommend disabling if it eats CPU), Chromecast, USB player, screensaver, firmware updates (keep by default), optional private DNS (does not block YouTube ads).
 
-## 3. Respaldar y medir base
+## 3. Back up and measure the baseline
 
-- Guardar: `getprop`, listas de paquetes, todos los ajustes, quién responde HOME y sus reclamantes, entradas TV, dueños de Wi-Fi (`dumpsys wifi`), y un resumen (modelo, board, Android, GPU, memoria, almacenamiento, banda/RSSI de Wi-Fi, CPU top).
-- Base tras un reinicio, igual que la medida final: esperar ~150 s tras el arranque; comparar MemAvailable, swap y CPU en reposo, no un pantallazo en uso. Capturar con `adb shell cat /proc/meminfo` y `adb shell top -b -n 1`.
-- CPU en reposo: en Realtek/MediaTek el load average es mentira (hilos del kernel en estado D); usar `%idle` de `top`.
-- Vídeo con tirones: YouTube > Ajustes > "Datos para expertos" durante la reproducción (velocidad, salud del búfer, cuadros perdidos) + banda real de `dumpsys wifi`: muchas teles son de solo 2,4 GHz aunque el SSID diga "5GHz" (la frecuencia de `dumpsys wifi` es la verdad, no el nombre del SSID).
-- `/data` con menos de ~10 % libre: las instalaciones fallan y la tele se arrastra.
+- Save: `getprop`, package lists, all settings, who answers HOME and its claimants, TV inputs, Wi-Fi owners (`dumpsys wifi`), and a summary (model, board, Android, GPU, memory, storage, Wi-Fi band/RSSI, top CPU).
+- Baseline after a reboot, same as the final measurement: wait ~150 s after boot; compare MemAvailable, swap and idle CPU, not a snapshot in use. Capture with `adb shell cat /proc/meminfo` and `adb shell top -b -n 1`.
+- Idle CPU: on Realtek/MediaTek the load average lies (kernel threads in D state); use `%idle` from `top`.
+- Video with stutter: YouTube > Settings > "Stats for nerds" during playback (speed, buffer health, dropped frames) + real band from `dumpsys wifi`: many TVs are 2.4 GHz only even when the SSID says "5GHz" (the frequency in `dumpsys wifi` is the truth, not the SSID name).
+- `/data` with less than ~10 % free: installs fail and the TV drags.
 
-## 4. Plan sin tocar nada
+## 4. Plan without touching anything
 
-Bajar las herramientas con `scripts/fetch_cleanyourtv.py`; el comando imprime la carpeta. Partir de la lista más parecida de `examples/<marca-modelo>/debloat.txt`, nunca de un `grep` de nombres.
+Download the tools with `scripts/fetch_cleanyourtv.py`; the command prints the folder. Start from the closest list in `examples/<brand-model>/debloat.txt`, never from a `grep` of names.
 
-`scripts/plan_android.py` corre offline sobre esa lista y las capturas de `pm list packages -e --user 0`, `pm list packages -d --user 0` y `dumpsys wifi`, con un `--keep` por cada app que la persona usa. `--salida lote.txt` deja solo lo aplicable. Reglas que implementa (origen: cleanyourtv `tools/disable.sh` líneas 68-69, commit `6e8615eb`; fábrica: free-my-tv `HomeMode.java`):
+`scripts/plan_android.py` runs offline on that list and the captures of `pm list packages -e --user 0`, `pm list packages -d --user 0` and `dumpsys wifi`, with a `--keep` for each app the user uses. `--output batch.txt` leaves only what is applicable. Rules it implements (source: cleanyourtv `tools/disable.sh` lines 68-69, commit `6e8615eb`; factory: free-my-tv `HomeMode.java`):
 
-- `CORE_RE`: núcleo de Android y middleware TV (systemui, settings, phone, shell, permissioncontroller, packageinstaller, providers, com.cltv.mal, com.mediatek.*) → la lista que toque esto sale con exit 1 y no se aplica.
-- `CORE_OK`: excepciones probadas: providers de calendar/contacts/userdictionary/blockednumber.
-- Menús de fábrica: rechazados. Dueños de una Wi-Fi guardada: rechazados; sin captura de `dumpsys wifi`, setupwraith también.
+- `CORE_RE`: Android core and TV middleware (systemui, settings, phone, shell, permissioncontroller, packageinstaller, providers, com.cltv.mal, com.mediatek.*) → a list that touches this exits with 1 and is not applied.
+- `CORE_OK`: proven exceptions: calendar/contacts/userdictionary/blockednumber providers.
+- Factory menus: rejected. Owners of a saved Wi-Fi: rejected; without a `dumpsys wifi` capture, setupwraith too.
 
-El plan no puede comprobar lo que exige hablar con la tele (HOME, `TV_INPUT_HARDWARE`, handlers): esas guardas corren en `tools/disable`.
+The plan cannot check what needs talking to the TV (HOME, `TV_INPUT_HARDWARE`, handlers): those guards run in `tools/disable`.
 
-Nunca deshabilitar, pase lo que pase el nombre: la app de Live TV y los servicios de entradas (un driver de entrada deshabilitado deja HDMI en "No Signal" hasta restauración completa y arranque en frío), el menú de fuentes/entradas, control remoto y emparejamiento Bluetooth, teclado, Play Store y Play Services, Ajustes, y `com.google.android.tungsten.setupwraith` cuando `dumpsys wifi` la muestra como dueña de la Wi-Fi guardada (deshabilitarla borra esa red y tira la tele de la red, y con ella ADB y el mando del celular). No tocar `TV_INPUT_HARDWARE`, `TV_INPUT_BUTTON` ni `CONNECT_INPUT`.
+Never disable, whatever the name: the Live TV app and the input services (a disabled input driver leaves HDMI at "No Signal" until a full restore and cold boot), the sources/inputs menu, remote control and Bluetooth pairing, keyboard, Play Store and Play Services, Settings, and `com.google.android.tungsten.setupwraith` when `dumpsys wifi` shows it as the owner of the saved Wi-Fi (disabling it erases that network and drops the TV off the network, and ADB and the phone remote with it). Do not touch `TV_INPUT_HARDWARE`, `TV_INPUT_BUTTON` or `CONNECT_INPUT`.
 
-## 5. Aplicar en lotes y verificar
+## 5. Apply in batches and verify
 
-Si se va a cambiar el Home, hacer antes la sección 6. Sin launcher nuevo verificado, sacar el de fábrica del lote: su deshabilitado va siempre por `tools/disable`, nunca con un `pm` suelto.
+If you are going to change the Home, do section 6 first. Without a verified new launcher, take the factory one out of the batch: disabling it always goes through `tools/disable`, never with a lone `pm`.
 
-- Aplicar cada lote con cleanyourtv desde su carpeta: `TV_HOST=<ip> tools/disable.sh <lote.txt>` o `tools/disable.ps1` en Windows, con su venv preparado. Antes del primer comando guarda en `~/.cleanyourtv/` el estado de cada paquete, el dueño de Home y las escalas de animación; ante un core sale sin mandar nada. Sin registro no se sigue.
-- Si hace falta un `pm` suelto: un comando por llamada, siempre `pm disable-user --user 0 <pkg>`; **nunca** `pm uninstall`, y nunca `pm clear` sobre el launcher ni sobre nada crítico (borra sus datos).
-- Tras cada lote, releer con `pm list packages -e --user 0`: un comando sin error no prueba que el paquete quedó apagado.
-- Re-correr la lista completa está bien: el registro conserva el primer estado.
-- Tras cada lote: pulsar Home, captura de pantalla, abrir las apps streaming principales (Netflix/HDMI suelen dar pantalla negra en captura: comprobar `mResumedActivity`), y para lotes de voz/mando pedir al usuario que pulse los botones reales.
-- Dejar para el final los paquetes con instalador (TCL `com.tcl.guard`, `appmarket2`).
-- **Espera antes de reiniciar: ≥45 s tras el último `pm disable-user`.** Los docs de cleanyourtv recomiendan ~15 s (`PROMPT.md`, `docs/TROUBLESHOOTING.md`) y algunas listas esperan 10-30 s, pero hay casos donde no bastó: en una TCL BeyondTV real, reiniciar enseguida tras un lote hizo perderlo completo (experiencia de un equipo); en una TCL 40S5400A un `adb reboot` "a few seconds" después del lote devolvió el lote entero habilitado y solo quedó estable con 60 s (`examples/tcl-40s5400a/debloat.txt` líneas 67-68); en un Xiaomi (aesp0) `sync` + 15 s no bastaron (volvieron los últimos ocho paquetes) y ~40 s sí (`examples/xiaomi-mitv-aesp0/debloat.txt` líneas 49-50); y una Sony BRAVIA pide ~90 s (`examples/sony-bravia-4k-ur3/debloat.txt` línea 37). Por eso este skill exige ≥45 s siempre, y verificar tras el arranque con `pm list packages -e --user 0`.
-- Varios firmwares reactivan paquetes en cada arranque (p. ej. TCL `com.tcl.overseasappshow`, `com.tcl.usercenter`): re-leer la lista tras el reinicio y anotarlo en la cabecera.
+- Apply each batch with cleanyourtv from its folder: `TV_HOST=<ip> tools/disable.sh <batch.txt>` or `tools/disable.ps1` on Windows, with its venv ready. Before the first command it saves each package's state, the Home owner and the animation scales in `~/.cleanyourtv/`; on a core it exits without sending anything. Without a record you do not continue.
+- If a lone `pm` is needed: one command per call, always `pm disable-user --user 0 <pkg>`; **never** `pm uninstall`, and never `pm clear` on the launcher or on anything critical (it erases its data).
+- After each batch, re-read with `pm list packages -e --user 0`: a command without an error does not prove the package ended up off.
+- Re-running the whole list is fine: the record keeps the first state.
+- After each batch: press Home, take a screenshot, open the main streaming apps (Netflix/HDMI usually show a black screen in a screenshot: check `mResumedActivity`), and for voice/remote batches ask the user to press the real buttons.
+- Leave packages with an installer for the end (TCL `com.tcl.guard`, `appmarket2`).
+- **Wait before rebooting: ≥45 s after the last `pm disable-user`.** cleanyourtv's docs recommend ~15 s (`PROMPT.md`, `docs/TROUBLESHOOTING.md`) and some lists wait 10-30 s, but there are cases where that was not enough: on a real TCL BeyondTV, rebooting right after a batch lost it completely (experience from one team); on a TCL 40S5400A an `adb reboot` "a few seconds" after the batch brought the whole batch back enabled and it only stayed stable with 60 s (`examples/tcl-40s5400a/debloat.txt` lines 67-68); on a Xiaomi (aesp0) `sync` + 15 s was not enough (the last eight packages came back) and ~40 s was (`examples/xiaomi-mitv-aesp0/debloat.txt` lines 49-50); and a Sony BRAVIA asks for ~90 s (`examples/sony-bravia-4k-ur3/debloat.txt` line 37). That is why this skill always requires ≥45 s, and verifying after boot with `pm list packages -e --user 0`.
+- Several firmwares re-enable packages on every boot (e.g. TCL `com.tcl.overseasappshow`, `com.tcl.usercenter`): re-read the list after the reboot and note it in the header.
 
-## 6. Cambiar el Home (opcional)
+## 6. Change the Home (optional)
 
-- En Android sí se reemplaza el Home. `launcher/build-and-install.sh` de cleanyourtv compila, instala, cambia el Home y revierte si no queda en el nuevo. Requiere JDK 17 y Android SDK; compilar fuera de carpetas sincronizadas (en una tele real Gradle se colgó dentro de Google Drive).
-- Solo deshabilitar el launcher de fábrica (`com.google.android.tvlauncher` u otro) **después de verificar que otra cosa responde a HOME**: `cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME` y `cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME`. Si la respuesta es `android` (chooser), si setupwraith sigue activa y responde HOME por delante, o si no hay otro launcher instalado: **no se deshabilita el de fábrica**. Las apps de configuración y el asistente de instalación también "responden HOME" pero no son launchers.
-- Afirmar "bootloop" exige esto: si el nuevo launcher no responde a HOME y el de fábrica está deshabilitado, la tele queda en chooser o en blanco; eso no es bootloop y se arregla habilitando el de fábrica de nuevo.
+- On Android the Home is replaced. cleanyourtv's `launcher/build-and-install.sh` builds, installs, changes the Home and reverts if it does not end up on the new one. Requires JDK 17 and the Android SDK; build outside synced folders (on a real TV Gradle hung inside Google Drive).
+- Only disable the factory launcher (`com.google.android.tvlauncher` or another) **after verifying that something else answers HOME**: `cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME` and `cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME`. If the answer is `android` (chooser), if setupwraith is still active and answers HOME ahead of it, or if there is no other launcher installed: **do not disable the factory one**. Setup apps and the setup wizard also "answer HOME" but are not launchers.
+- Claiming "bootloop" requires this: if the new launcher does not answer HOME and the factory one is disabled, the TV ends up in the chooser or blank; that is not a bootloop and it is fixed by enabling the factory one again.
 
-## 7. Velocidad (opcional, con expectativas honestas)
+## 7. Speed (optional, with honest expectations)
 
-- Escalas de animación a 0.5 (`settings put global window_animation_scale 0.5`, ídem `transition_animation_scale`, `animator_duration_scale`); `restore` las restablece.
-- Compilar las apps del dock a full: `cmd package compile -m speed -f <pkg>`, una por llamada; verificar con `dumpsys package dexopt` (`status=speed`) en vez de reintentar. **Nota:** una actualización por Play Store devuelve la app a `speed-profile` (observado en una TCL BeyondTV): sin root no se puede fijar, hay que repetirlo.
-- Modo extreme solo en teles muy débiles (1 GB o menos, Android 7-9) y con el dueño de acuerdo: escalas a 0, apps sin segundo plano (`appops RUN_ANY_IN_BACKGROUND ignore` + bucket `rare`; nunca música, casting, launcher, teclado ni servicios de entrada) y `pm trim-caches`.
+- Animation scales to 0.5 (`settings put global window_animation_scale 0.5`, same for `transition_animation_scale`, `animator_duration_scale`); `restore` resets them.
+- Compile the dock apps to full: `cmd package compile -m speed -f <pkg>`, one per call; verify with `dumpsys package dexopt` (`status=speed`) instead of retrying. **Note:** a Play Store update returns the app to `speed-profile` (observed on a TCL BeyondTV): without root it cannot be pinned, you have to repeat it.
+- Extreme mode only on very weak TVs (1 GB or less, Android 7-9) and with the owner's agreement: scales to 0, apps without background (`appops RUN_ANY_IN_BACKGROUND ignore` + bucket `rare`; never music, casting, launcher, keyboard or input services) and `pm trim-caches`.
 
-## 8. Cerrar ADB
+## 8. Close ADB
 
-- Cerrar es lo predeterminado. Apagar en la tele: USB debugging, depuración de red y depuración inalámbrica.
-- Si la persona pide dejarlo abierto, explicar que ADB de red va en texto plano y hacerlo solo si lo acepta de forma explícita. Mejor alternativa: cerrarlo y anotar cómo reabrirlo.
-- Comprobar desde la carpeta de cleanyourtv con `py -I tools/adb-closed.py <ip>`: **solo exit 0 cuenta como cerrado** (la tele rechazó la conexión). Timeout o nada responde = exit 2 = no se pudo comprobar (la tele puede estar apagada, dormida o en otra red); no se afirma "cerrado".
-- Si la tele tiene `ro.adb.secure=0` (o no lo define en build debug o Android 4.4), avisar con texto plano: el puerto 5555 da shell a cualquier aparato de la red sin pedir permiso.
+- Closing is the default. Turn off on the TV: USB debugging, network debugging and wireless debugging.
+- If the user asks to leave it open, explain that network ADB runs in plain text and do it only if they accept it explicitly. Better alternative: close it and note how to reopen it.
+- Check from the cleanyourtv folder with `py -I tools/adb-closed.py <ip>`: **only exit 0 counts as closed** (the TV refused the connection). Timeout or nothing answering = exit 2 = could not check (the TV may be off, asleep or on another network); do not claim "closed".
+- If the TV has `ro.adb.secure=0` (or does not define it in a debug build or Android 4.4), warn in plain text: port 5555 gives a shell to any device on the network without asking permission.
 
-## 9. Revertir
+## 9. Revert
 
-`TV_HOST=<ip> tools/restore.sh <la misma lista>` (o `restore.ps1`): reproduce el registro, incluido el Home y las escalas de animación. Sin registro habilita toda la lista y pone las escalas en 1.0: avisarlo.
+`TV_HOST=<ip> tools/restore.sh <the same list>` (or `restore.ps1`): replays the record, including the Home and the animation scales. Without a record it enables the whole list and sets the scales to 1.0: warn about it.
 
-## Referencias de origen
+## Source references
 
-- Guardas CORE, Home, setupwraith y cierre: Gathin23/cleanyourtv (`tools/disable.sh`, `tools/adb-closed.py`, `docs/TROUBLESHOOTING.md`), commit `6e8615eb`.
-- Flujo, métricas y preguntas: paisanos-io/tv-makeover (`skills/android-tv-debloat/SKILL.md`, `references/quirks.md`).
-- `pm disable-user` reversible y watchdog de launcher: simbasjungles/free-my-tv (`app/src/io/freemytv/HomeMode.java`).
+- CORE guards, Home, setupwraith and closing: Gathin23/cleanyourtv (`tools/disable.sh`, `tools/adb-closed.py`, `docs/TROUBLESHOOTING.md`), commit `6e8615eb`.
+- Flow, metrics and questions: paisanos-io/tv-makeover (`skills/android-tv-debloat/SKILL.md`, `references/quirks.md`).
+- `pm disable-user` reversible and launcher watchdog: simbasjungles/free-my-tv (`app/src/io/freemytv/HomeMode.java`).

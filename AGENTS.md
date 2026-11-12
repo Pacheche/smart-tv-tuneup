@@ -1,5 +1,5 @@
-# Instrucciones para agentes
+# Agent instructions
 
-Este repositorio es la skill `smart-tv-tuneup`. Para optimizar una tele, leé `SKILL.md` y seguilo.
+This repository is the `smart-tv-tuneup` skill. To tune up a TV, read `SKILL.md` and follow it.
 
-Para modificar la skill, corré `py -I scripts/test_scripts.py` antes de terminar.
+To change the skill, run `py -I scripts/test_scripts.py` before you finish.

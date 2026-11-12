@@ -1,41 +1,41 @@
-# webOS con root: guía
+# webOS with root: guide
 
-**Esta skill no ejecuta ni automatiza root.** Este archivo es una guía: si la persona lo pide, primero leer modelo y firmware de la tele y compararlos con el perfil de abajo, explicar requisitos y riesgos, y remitir a las fuentes. Sin root no hay Home propio ni borrado de apps de LG; con root esas funciones existen, pero solo están declaradas para ese perfil. Si el modelo no coincide, decirlo: no hay soporte declarado.
+**This skill does not run or automate root.** This file is a guide: if the user asks for it, first read the TV's model and firmware and compare them with the profile below, explain requirements and risks, and point to the sources. Without root there is no Home of your own and no deleting LG apps; with root those features exist, but they are only declared for that profile. If the model does not match, say so: there is no declared support.
 
-## 1. Lo único que el proyecto de frxnnk declara como soportado
+## 1. The only thing the frxnnk project declares as supported
 
-Fuente: `frxnnk_webos-liquid-glass-launcher` repo, `docs/root-automation.md` (MIT).
+Source: `frxnnk_webos-liquid-glass-launcher` repo, `docs/root-automation.md` (MIT).
 
-- **Único perfil aceptado:** modelo **49UN7310PSC**, firmware **04.64.00**, webOS **5.6.2-21**, build `jhericurl-jimna`, board **K6LP_ATSC_BR**. "No hay downgrade, flasheo ni soporte declarado para otros modelos" (líneas 8-10).
-- El plan dura **cinco minutos**, se consume **una sola vez** y se vuelve a comprobar antes de aplicarlo; los pasos de preparación no rootéan (líneas 47-48). Requiere **Python 3.8+**.
-- Fija fuentes de SlopBro y HBC **por commit y SHA-256**, y el IPK de HBC **0.7.3** por SHA-256 (línea 22; hash del IPK en línea 131).
-- **No descarga ni ejecuta el `autoroot.sh` upstream** (línea 28); incluye su `COPYING` de **AGPL-3.0-or-later** por ser una derivación.
-- Si algo queda incierto: conserva, registra recuperación y devuelve resultado **parcial con arranque físico pendiente**: "no reinicia la TV para fabricar esa confirmación" (líneas 39-45).
-- Paradas de seguridad: `DEVMODE_TOKEN_INVALID` (token convertido en directorio) y `SIGNED_BACKUP_REQUIRED` (falta backup verificable del script original) (líneas 60-61).
-- Hash del script stock observado en esa unidad: `18b6b7cce77d640fef78d9d247d6fc672b0850bd728dd2a3c44105a485abc846` (línea 66). Solo sirve para esa unidad.
+- **Only accepted profile:** model **49UN7310PSC**, firmware **04.64.00**, webOS **5.6.2-21**, build `jhericurl-jimna`, board **K6LP_ATSC_BR**. "No downgrade, flashing or declared support for other models" (lines 8-10).
+- The plan lasts **five minutes**, is consumed **once** and is checked again before applying it; the preparation steps do not root (lines 47-48). Requires **Python 3.8+**.
+- It pins the SlopBro and HBC sources **by commit and SHA-256**, and the HBC IPK **0.7.3** by SHA-256 (line 22; IPK hash on line 131).
+- **It does not download or run the upstream `autoroot.sh`** (line 28); it includes its **AGPL-3.0-or-later** `COPYING` because it is a derivative.
+- If anything stays uncertain: keep it, record recovery and return a **partial result with a physical boot pending**: "it does not reboot the TV to manufacture that confirmation" (lines 39-45).
+- Safety stops: `DEVMODE_TOKEN_INVALID` (token turned into a directory) and `SIGNED_BACKUP_REQUIRED` (missing a verifiable backup of the original script) (lines 60-61).
+- Hash of the stock script observed on that unit: `18b6b7cce77d640fef78d9d247d6fc672b0850bd728dd2a3c44105a485abc846` (line 66). It only works for that unit.
 
-## 2. Riesgos verificados (por qué esta skill no lo hace)
+## 2. Verified risks (why this skill does not do it)
 
-De `frxnnk_webos-liquid-glass-launcher`, `docs/root-and-home.md`:
+From `frxnnk_webos-liquid-glass-launcher`, `docs/root-and-home.md`:
 
-- **HBC 0.7.3 abre Telnet root sin autenticación por defecto**; el flag normal de desactivación no se consulta en la rama failsafe (líneas 123-126). En esa instalación hubo que crear `/var/luna/preferences/webosbrew_telnet_disabled` y verificar el puerto 23 cerrado.
-- HBC usa Dropbear **sin deshabilitar explícitamente las contraseñas** (línea 127).
-- La elevación **modifica configuración y permisos LS2** y habilita un servicio con ejecución root amplia + actividad persistente (líneas 129-131).
-- **SlopBro** descarga HBC sin comprobar hash, cambia el estado persistente de Developer Mode, puede renombrar el script de inicio de LG y **no implementa rollback transaccional** (líneas 134-136). Su cliente desactiva la verificación del certificado WSS y entrega el payload por HTTP (línea 138).
-- No hay un procedimiento completo de unroot para este hardware (línea 142).
-- El autoroot upstream anterior **rompió Developer Mode** en esa TV (hubo que recuperar el script stock y recrear el token a mano) (`root-automation.md` líneas 54-56).
+- **HBC 0.7.3 opens root Telnet without authentication by default**; the normal disable flag is not consulted in the failsafe branch (lines 123-126). On that install, `/var/luna/preferences/webosbrew_telnet_disabled` had to be created and port 23 verified closed.
+- HBC uses Dropbear **without explicitly disabling passwords** (line 127).
+- The elevation **changes LS2 configuration and permissions** and enables a service with broad root execution + a persistent activity (lines 129-131).
+- **SlopBro** downloads HBC without checking the hash, changes the persistent Developer Mode state, can rename LG's startup script and **implements no transactional rollback** (lines 134-136). Its client disables WSS certificate verification and delivers the payload over HTTP (line 138).
+- There is no complete unroot procedure for this hardware (line 142).
+- The previous upstream autoroot **broke Developer Mode** on that TV (the stock script had to be recovered and the token recreated by hand) (`root-automation.md` lines 54-56).
 
-## 3. Si aun así el usuario insiste (límite de esta skill)
+## 3. If the user insists anyway (limit of this skill)
 
-1. Dejar por escrito que hay **un solo perfil declarado** y que el riesgo lo asume quien lo pide.
-2. Exigir confirmación explícita del usuario **por escrito** antes de cualquier paso.
-3. Conservar siempre: acceso SSH root, clave autorizada, **backup del estado de la TV** y el IPK de HBC (`root-and-home.md` línea 146).
-4. Verificar tras arranque en frío: puerto 23 cerrado y acceso root por clave.
-5. Avisar de que **no hay rollback automático** ni un procedimiento completo de unroot.
+1. Put in writing that there is **a single declared profile** and that whoever asks assumes the risk.
+2. Require the user's explicit confirmation **in writing** before any step.
+3. Always keep: root SSH access, the authorized key, a **backup of the TV state** and the HBC IPK (`root-and-home.md` line 146).
+4. Verify after a cold boot: port 23 closed and root access by key.
+5. Warn that there is **no automatic rollback** and no complete unroot procedure.
 
-**Fuera del alcance de esta skill:** ejecutar el exploit, tocar el firmware, flashear, hacer downgrade o automatizar cualquiera de esos pasos.
+**Outside the scope of this skill:** running the exploit, touching the firmware, flashing, downgrading or automating any of those steps.
 
-## Fuentes
+## Sources
 
 - `frxnnk_webos-liquid-glass-launcher` (MIT): `docs/root-automation.md`, `docs/root-and-home.md`, `docs/local-installer.md`, `README.md`.
-- Las guías de root de webOS Homebrew Channel están en `github.com/webosbrew`: remitir ahí; esta skill no las reproduce ni las ejecuta.
+- The webOS Homebrew Channel root guides are at `github.com/webosbrew`: point there; this skill does not reproduce or run them.

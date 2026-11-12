@@ -1,76 +1,100 @@
-# smart-tv-tuneup
+<p align="center">
+  <img src="assets/banner.svg" alt="smart-tv-tuneup: your agent cleans up a slow smart TV, measured before and after, reversible, no root" width="100%">
+</p>
 
-Skill para agentes de IA que optimiza smart TVs con Android TV, Google TV, LG webOS o Samsung Tizen.
+<p align="center">
+  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-121212?style=flat-square"></a>
+  <img alt="Android TV and Google TV" src="https://img.shields.io/badge/Android%20TV%20%C2%B7%20Google%20TV-debloat%20%2B%20launcher-121212?style=flat-square">
+  <img alt="LG webOS and Samsung Tizen" src="https://img.shields.io/badge/webOS%20%C2%B7%20Tizen-launcher%20as%20an%20app-121212?style=flat-square">
+  <img alt="No root" src="https://img.shields.io/badge/root-not%20needed-ff7a1a?style=flat-square">
+</p>
 
-Instalala y decile a tu agente "optimizá mi tele": la skill le indica cómo identificarla, limpiarla, medir el resultado y dejarla lista para revertir. El agente ejecuta el trabajo y te pide solo lo que hay que hacer en la tele.
+An agent skill that tunes up a slow smart TV running Android TV, Google TV, LG webOS or Samsung Tizen.
 
-## Instalación
+Install it and tell your agent "my TV is slow, tune it up". The agent identifies the TV, backs it up, shows you a plan, cleans it in small batches, measures the result and leaves a way to undo every change. You only do what has to happen on the TV itself: turn on debugging, accept a prompt, press a button on the remote.
+
+## Install
 
 ```bash
 npx skills add Pacheche/smart-tv-tuneup -g -y
 ```
 
-O clonala en la carpeta de skills de tu agente:
+Or clone it into your agent's skills folder:
 
-| Agente | Carpeta |
+| Agent | Folder |
 |---|---|
 | Claude Code | `~/.claude/skills/smart-tv-tuneup` |
 | Codex | `~/.codex/skills/smart-tv-tuneup` |
-| Copilot CLI, Gemini CLI | `~/.agents/skills/smart-tv-tuneup` |
+| Copilot CLI, Gemini CLI, others | `~/.agents/skills/smart-tv-tuneup` |
 
 ```bash
 git clone https://github.com/Pacheche/smart-tv-tuneup.git ~/.claude/skills/smart-tv-tuneup
 ```
 
-Si tu agente no carga skills, abrí esta carpeta y pedile que siga `SKILL.md`; `AGENTS.md` ya lo dirige ahí.
+If your agent does not load skills, open this folder and ask it to follow `SKILL.md`. `AGENTS.md` already points there.
 
-## Uso
+## Use
 
-Pedile al agente, por ejemplo: "Mi tele está lenta, optimizala. La IP es 192.168.1.50". El agente necesita terminal, Python 3, git y estar en la misma red que la tele.
-
-Comandos que usa la skill:
-
-```bash
-py scripts/detect_tv.py <ip de la tele>
-py scripts/fetch_cleanyourtv.py
-py scripts/plan_android.py --lista <cleanyourtv>/examples/<modelo>/debloat.txt --habilitados captura-e.txt --wifi dumpsys-wifi.txt --salida lote.txt
-py -I scripts/test_scripts.py
+```text
+My TV is slow, tune it up. Its IP is 192.168.1.50
 ```
 
-`captura-e.txt` sale de `adb shell pm list packages -e --user 0`, y `dumpsys-wifi.txt`, de `adb shell dumpsys wifi`.
+The agent needs a terminal, Python 3, git and the same network as the TV.
 
-## Qué hace
+## How it works
 
-- Identifica la tele sin escribir nada (sondeo TCP de solo lectura) y pide modelo, firmware y versión antes de cualquier cambio.
-- Pregunta qué apps usa la persona y respalda el estado base (paquetes, quién responde a HOME, escalas, métricas).
-- Muestra el plan sin tocar nada; recién después aplica en lotes chicos, un comando por llamada, verificando tras cada lote.
-- Aplica `pm disable-user --user 0`, **nunca** `pm uninstall`, y espera ≥ 45 s antes de reiniciar.
-- Mide antes y después con modelo, contexto y unidad, cierra ADB al terminar y entrega el informe con cómo revertir cada cosa.
+```mermaid
+flowchart LR
+  A[Identify<br/>read-only probe] --> B[Ask which<br/>apps you use]
+  B --> C[Back up<br/>and measure]
+  C --> D[Show the plan<br/>you approve]
+  D --> E[Apply in<br/>small batches]
+  E --> F[Measure<br/>again]
+  F --> G[Close ADB]
+  G --> H[Report with<br/>how to undo]
+```
 
-## Qué NO hace
+- **Identify.** A read-only TCP probe finds the platform. The agent records the exact model, firmware and fingerprint before changing anything.
+- **Back up.** Packages, which app answers HOME, Wi-Fi owners, settings and baseline metrics after a reboot.
+- **Apply.** `pm disable-user --user 0`, one command at a time, re-checked after each batch, with at least 45 s before any reboot. Never `pm uninstall`.
+- **Measure.** The same metrics as the baseline, with model, context and units. No before and after, no claim of improvement.
+- **Close.** ADB counts as closed only when the TV refuses the connection. A timeout does not count.
 
-- No hace root: en webOS incluye una guía con requisitos y riesgos.
-- No reemplaza el Home en LG ni Samsung: allí el launcher se instala como app. En Android sí puede cambiarlo.
-- No deshabilita ni desinstala bloatware en webOS ni en Tizen sin root.
-- No flashea ni hace downgrade, y el factory reset es el último escalón, con aviso previo.
+## What it covers
 
-## Soporte
-
-| Plataforma | Qué esta skill sabe hacer |
+| Platform | What the skill does |
 |---|---|
-| Android TV / Google TV (sin root) | Identificar, respaldar, planear y aplicar debloat por ADB con cleanyourtv, cambiar el Home, verificar y revertir |
-| LG webOS (sin root) | Instalar launcher como app por Developer Mode; el Home de fábrica se queda |
-| webOS con root | Guía de requisitos y riesgos |
-| Samsung Tizen (sin root) | Instalar launcher como app por Developer Mode/sdb; sin shell ni `pm` en retail |
-| Orsay (Samsung viejo) | No aplica |
+| Android TV, Google TV (no root) | Identify, back up, plan and apply a debloat over ADB with [cleanyourtv](https://github.com/Gathin23/cleanyourtv), swap the Home launcher, verify and revert |
+| LG webOS (no root) | Install a launcher as an app through Developer Mode. The factory Home stays |
+| LG webOS with root | A guide to the requirements and risks. The skill does not root the TV |
+| Samsung Tizen (no root) | Install a launcher as an app through Developer Mode and `sdb`. Retail sets have no shell or `pm` |
+| Older Samsung (Orsay), Fire TV, Roku, VIDAA | Not covered. The agent says so and changes nothing |
 
-## Advertencia de riesgo
+## What it will not do
 
-Deshabilitar paquetes puede dejar una tele sin arrancar. Esta skill existe justo para reducir ese riesgo (identificar, respaldar, plan, lotes chicos, ≥ 45 s antes de reiniciar, nunca tocar el núcleo), pero el riesgo es real y lo asume quien la usa. Solo usarla en teles propias o con autorización de sus dueños. Ver `references/recuperacion.md` antes de empezar.
+- Root a TV, flash firmware or downgrade it.
+- Replace the Home screen on LG or Samsung. There the launcher is installed as an app.
+- Remove bloatware on webOS or Tizen without root.
+- Jump to a factory reset. That is the last step of the recovery ladder, after a cold boot, a phone remote or USB keyboard, re-enabling from Settings and a logged restore, and the agent warns you first.
 
-## Créditos
+## Scripts
 
-- `CORE_RE` y `CORE_OK` de `scripts/plan_android.py` vienen de [cleanyourtv](https://github.com/Gathin23/cleanyourtv) (MIT), que la skill también usa para aplicar los cambios en Android.
-- `FACTORY_RE` de `scripts/plan_android.py` viene de [free-my-tv](https://github.com/simbasjungles/free-my-tv) (MIT).
+```bash
+python3 scripts/detect_tv.py <tv-ip>
+python3 scripts/fetch_cleanyourtv.py
+python3 scripts/plan_android.py --list <cleanyourtv>/examples/<model>/debloat.txt --enabled enabled.txt --wifi dumpsys-wifi.txt --output batch.txt
+python3 -I scripts/test_scripts.py
+```
 
-Licencia: MIT, © 2026 Francisco Rivarola.
+`enabled.txt` comes from `adb shell pm list packages -e --user 0` and `dumpsys-wifi.txt` from `adb shell dumpsys wifi`. On Windows, use `py` instead of `python3`.
+
+## Risk
+
+Disabling packages can leave a TV unable to boot. This skill exists to shrink that risk (identify, back up, plan, small batches, at least 45 s before rebooting, never touch the core), but the risk is real and it is yours. Use it only on TVs you own or are allowed to change. Read [`references/recovery.md`](references/recovery.md) before you start.
+
+## Credits
+
+- `CORE_RE` and `CORE_OK` in `scripts/plan_android.py` come from [cleanyourtv](https://github.com/Gathin23/cleanyourtv) (MIT), which the skill also uses to apply changes on Android.
+- `FACTORY_RE` in `scripts/plan_android.py` comes from [free-my-tv](https://github.com/simbasjungles/free-my-tv) (MIT).
+
+MIT licence, © 2026 Francisco Rivarola.

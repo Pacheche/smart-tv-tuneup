@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-label="smart-tv-tuneup: your agent debloats and speeds up your smart TV, measured and reversible, without root">
+  <defs>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="2" fill="#ffffff" opacity="0.035"/>
+    </pattern>
+    <clipPath id="screen"><rect x="808" y="70" width="392" height="232" rx="14"/></clipPath>
+  </defs>
+
+  <rect width="1280" height="420" fill="#121212"/>
+
+  <!-- Title block -->
+  <text x="72" y="118" fill="#8a8a8a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" letter-spacing="2">AGENT SKILL · ANDROID TV · GOOGLE TV · WEBOS · TIZEN</text>
+  <text x="68" y="200" fill="#f4f1ea" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="76" font-weight="800" letter-spacing="-2">smart-tv-tuneup</text>
+  <text x="72" y="254" fill="#cfcac0" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="27">Your agent cleans up a slow smart TV.</text>
+  <text x="72" y="292" fill="#cfcac0" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="27">Measured before and after. Reversible. No root.</text>
+
+  <!-- Terminal line -->
+  <rect x="72" y="326" width="560" height="44" rx="8" fill="#1d1d1d" stroke="#2c2c2c"/>
+  <text x="92" y="355" fill="#ff7a1a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">&gt;</text>
+  <text x="114" y="355" fill="#e8e4da" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" textLength="280" lengthAdjust="spacingAndGlyphs">"my TV is slow, tune it up"</text>
+  <rect x="404" y="340" width="11" height="20" fill="#ff7a1a"/>
+
+  <!-- TV -->
+  <rect x="796" y="58" width="416" height="256" rx="22" fill="#1b1b1b" stroke="#333" stroke-width="2"/>
+  <g clip-path="url(#screen)">
+    <!-- Test-pattern bars -->
+    <rect x="808" y="70" width="56" height="150" fill="#c0c0c0"/>
+    <rect x="864" y="70" width="56" height="150" fill="#c0c000"/>
+    <rect x="920" y="70" width="56" height="150" fill="#00c0c0"/>
+    <rect x="976" y="70" width="56" height="150" fill="#00c000"/>
+    <rect x="1032" y="70" width="56" height="150" fill="#c000c0"/>
+    <rect x="1088" y="70" width="56" height="150" fill="#c00000"/>
+    <rect x="1144" y="70" width="56" height="150" fill="#0000c0"/>
+    <rect x="808" y="220" width="392" height="82" fill="#0e0e0e"/>
+    <!-- Readout -->
+    <text x="830" y="252" fill="#8a8a8a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">BACKED UP · BATCHED · REVERSIBLE</text>
+    <text x="830" y="282" fill="#f4f1ea" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">ADB closed. Report written.</text>
+    <rect x="808" y="70" width="392" height="232" fill="url(#scan)"/>
+  </g>
+  <!-- Stand -->
+  <rect x="980" y="314" width="48" height="26" fill="#262626"/>
+  <rect x="924" y="340" width="160" height="10" rx="5" fill="#262626"/>
+  <!-- Power LED -->
+  <circle cx="1188" cy="306" r="4" fill="#ff7a1a"/>
+</svg>

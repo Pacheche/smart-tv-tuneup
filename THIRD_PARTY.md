@@ -1,24 +1,24 @@
-# Material de terceros
+# Third-party material
 
-Código copiado de otros proyectos, con su origen y licencia.
+Code copied from other projects, with its origin and license.
 
-## cleanyourtv: regexes del núcleo de Android
+## cleanyourtv: Android core regexes
 
-- **Qué:** las constantes `CORE_RE` y `CORE_OK` de `scripts/plan_android.py` están
-  copiadas **literales**, incluida la anotación de origen en el comentario.
-- **Origen:** [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv),
-  archivo `tools/disable.sh`, líneas 68-69, commit fijo
-  `6e8615eb0be0e843ceeebedae246d69f3e0a88d7` (verificado con `git rev-parse HEAD`).
-- **Licencia:** MIT, Copyright (c) 2026 Gathin.
-- **Por qué importa:** es la única parte donde el criterio de "qué es núcleo" no es
-  mío; si cleanyourtv corrige sus regexes, hay que volver a verificarlas contra ese
-  commit antes de cambiarlas acá.
+- **What:** the `CORE_RE` and `CORE_OK` constants in `scripts/plan_android.py` are
+  copied **verbatim**, including the origin note in the comment.
+- **Origin:** [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv),
+  file `tools/disable.sh`, lines 68-69, pinned commit
+  `6e8615eb0be0e843ceeebedae246d69f3e0a88d7` (verified with `git rev-parse HEAD`).
+- **License:** MIT, Copyright (c) 2026 Gathin.
+- **Why it matters:** this is the only part where the call on "what is core" is not
+  mine. If cleanyourtv fixes its regexes, check them again against that commit
+  before changing them here.
 
-## free-my-tv: patrón de menús de fábrica
+## free-my-tv: factory menu pattern
 
-- **Qué:** `FACTORY_RE` de `scripts/plan_android.py`, tomado del patrón `FACTORY`.
-- **Origen:** [simbasjungles/free-my-tv](https://github.com/simbasjungles/free-my-tv),
-  archivo `app/src/io/freemytv/HomeMode.java`.
-- **Licencia:** MIT, Copyright (c) 2026 Free My TV contributors.
+- **What:** `FACTORY_RE` in `scripts/plan_android.py`, taken from the `FACTORY` pattern.
+- **Origin:** [simbasjungles/free-my-tv](https://github.com/simbasjungles/free-my-tv),
+  file `app/src/io/freemytv/HomeMode.java`.
+- **License:** MIT, Copyright (c) 2026 Free My TV contributors.
 
-El texto completo de cada licencia MIT está en el archivo LICENSE de su repositorio.
+The full text of each MIT license is in the LICENSE file of its repository.

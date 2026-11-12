@@ -1,35 +1,35 @@
 #!/usr/bin/env python3
-"""Arma el plan de debloat de Android sin tocar la tele (offline, sin red).
+"""Build the Android debloat plan without touching the TV (offline, no network).
 
-    py scripts/plan_android.py --lista debloat.txt --habilitados captura-e.txt \
-        [--deshabilitados captura-d.txt] [--wifi dumpsys-wifi.txt] [--keep paquete] \
-        [--salida lote.txt]
+    py scripts/plan_android.py --list debloat.txt --enabled capture-e.txt \
+        [--disabled capture-d.txt] [--wifi dumpsys-wifi.txt] [--keep package] \
+        [--output batch.txt]
 
-Entradas (capturas hechas a mano desde la tele, una sola vez):
-    pm list packages -e --user 0      -> --habilitados   (obligatorio)
-    pm list packages -d --user 0      -> --deshabilitados (opcional)
-    dumpsys wifi                      -> --wifi          (opcional: dueños de la Wi-Fi y banda)
-La lista es un paquete por línea; '#' comenta y las líneas vacías se ignoran.
+Inputs (captures made by hand from the TV, once):
+    pm list packages -e --user 0      -> --enabled   (required)
+    pm list packages -d --user 0      -> --disabled  (optional)
+    dumpsys wifi                      -> --wifi      (optional: Wi-Fi owners and band)
+The list is one package per line; '#' comments and empty lines are ignored.
 
-Salida por paquete: aplicar / rechazado / no instalado / ya apagado, con el motivo.
-Exit 0 si el plan no toca nada del núcleo; exit 1 si toca (el plan sale bloqueado y no
-hay que aplicarlo); exit 2 si falta una entrada o el archivo no se puede leer.
+Output per package: apply / rejected / not installed / already disabled, with the reason.
+Exit 0 if the plan does not touch any core package; exit 1 if it does (the plan comes out
+blocked and must not be applied); exit 2 if an input is missing or the file cannot be read.
 
-Con --salida escribe solo los paquetes en estado "aplicar", listos para pasarle a
-tools/disable de cleanyourtv, que suma las guardas que necesitan hablar con la tele
-(HOME, entradas de TV, handlers) y el registro de recuperación.
+With --output it writes only the packages in "apply" state, ready to hand to
+cleanyourtv's tools/disable, which adds the guards that need to talk to the TV
+(HOME, TV inputs, handlers) and the recovery record.
 
-Esto NO ejecuta nada. Tras aplicar, esperar >= 45 s antes de reiniciar
-(references/android.md). Nunca `pm uninstall`.
+This runs nothing. After applying, wait >= 45 s before rebooting
+(references/android.md). Never `pm uninstall`.
 """
 import argparse
 import re
 import sys
 
-# Núcleo de Android y middleware de TV: si uno de estos sale en la lista, el plan se
-# bloquea entero. Copiado literal de cleanyourtv (Gathin23/cleanyourtv, commit
-# 6e8615eb0be0e843ceeebedae246d69f3e0a88d7, tools/disable.sh líneas 68-69), porque
-# deshabilitar cualquiera de ellos dejó teles sin arrancar (#884, #1578, #2557, #2803).
+# Android core and TV middleware: if one of these appears in the list, the whole plan is
+# blocked. Copied verbatim from cleanyourtv (Gathin23/cleanyourtv, commit
+# 6e8615eb0be0e843ceeebedae246d69f3e0a88d7, tools/disable.sh lines 68-69), because
+# disabling any of them left TVs unable to boot (#884, #1578, #2557, #2803).
 CORE_RE = ('^(android|android\\.ext\\.(services|shared)|com\\.android\\.sdksandbox|'
            'com\\.android\\.location\\.fused|com\\.android\\.systemui|com\\.android\\.shell|'
            'com\\.android\\.phone|com\\.android\\.settings|com\\.android\\.tv\\.settings|'
@@ -37,180 +37,181 @@ CORE_RE = ('^(android|android\\.ext\\.(services|shared)|com\\.android\\.sdksandb
            'ext\\.shared|modulemetadata)|com\\.google\\.android\\.overlay\\.modules.*|'
            'com\\.android\\.providers\\..*|com\\.cltv\\.mal|'
            'com\\.mediatek\\.(tis|tv\\.service|tv\\.agent))$')
-# Excepción probada: estos content providers no los usa ninguna función de la tele.
+# Proven exception: no TV function uses these content providers.
 CORE_OK = '^com\\.android\\.providers\\.(calendar|contacts|userdictionary|blockednumber)$'
 
-# Menús de fábrica y servicio de cualquier marca. Copiado de free-my-tv
-# (simbasjungles/free-my-tv, app/src/io/freemytv/HomeMode.java, patrón FACTORY).
+# Factory menus and any brand's service. Copied from free-my-tv
+# (simbasjungles/free-my-tv, app/src/io/freemytv/HomeMode.java, FACTORY pattern).
 FACTORY_RE = r'^(.*\.)?(factory|factorymenu|facmenu|fac|hkcfac|testpq)(\..*)?$'
 SETUPWRAITH = "com.google.android.tungsten.setupwraith"
 
-APLICAR = "aplicar"
-RECHAZADO = "rechazado"
-NO_INSTALADO = "no instalado"
-YA_APAGADO = "ya apagado"
+APPLY = "apply"
+REJECTED = "rejected"
+NOT_INSTALLED = "not installed"
+ALREADY_DISABLED = "already disabled"
 
 
-def leer_texto(ruta):
-    """Lee una captura: PowerShell 5.1 redirige `>` en UTF-16, el resto en UTF-8."""
-    with open(ruta, "rb") as f:
-        datos = f.read()
-    if datos[:2] in (b"\xff\xfe", b"\xfe\xff"):
-        return datos.decode("utf-16", errors="replace")
-    return datos.decode("utf-8-sig", errors="replace")
+def read_text(path):
+    """Read a capture: PowerShell 5.1 redirects `>` as UTF-16, everything else as UTF-8."""
+    with open(path, "rb") as f:
+        data = f.read()
+    if data[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        return data.decode("utf-16", errors="replace")
+    return data.decode("utf-8-sig", errors="replace")
 
 
-def leer_lista(ruta):
-    """Lista de paquetes a deshabilitar: una por línea, '#' comenta."""
-    paquetes = []
-    for linea in leer_texto(ruta).splitlines():
-        texto = linea.split("#", 1)[0].strip()
-        if not texto:
+def read_list(path):
+    """List of packages to disable: one per line, '#' comments."""
+    packages = []
+    for line in read_text(path).splitlines():
+        text = line.split("#", 1)[0].strip()
+        if not text:
             continue
-        if texto.startswith("package:"):
-            texto = texto[len("package:"):]
-        paquetes.append(texto)
-    return paquetes
+        if text.startswith("package:"):
+            text = text[len("package:"):]
+        packages.append(text)
+    return packages
 
 
-def leer_paquetes(ruta):
-    """Salida de `pm list packages [-e|-d] --user 0` -> conjunto de nombres."""
-    paquetes = set()
-    for linea in leer_texto(ruta).splitlines():
-        texto = linea.strip()
-        if texto.startswith("package:"):
-            texto = texto[len("package:"):]
-        if texto:
-            paquetes.add(texto)
-    return paquetes
+def read_packages(path):
+    """Output of `pm list packages [-e|-d] --user 0` -> set of names."""
+    packages = set()
+    for line in read_text(path).splitlines():
+        text = line.strip()
+        if text.startswith("package:"):
+            text = text[len("package:"):]
+        if text:
+            packages.add(text)
+    return packages
 
 
-def leer_wifi(ruta):
-    """Mejor esfuerzo con `dumpsys wifi`: {'duenos': set, 'ssid': str, 'frecuencia': int}."""
-    datos = {}
-    texto = leer_texto(ruta)
-    datos["duenos"] = set(re.findall(r"cname=([\w.]+)", texto))
-    m = re.search(r"SSID:\s*([^,\n]+)", texto)
+def read_wifi(path):
+    """Best effort with `dumpsys wifi`: {'owners': set, 'ssid': str, 'frequency': int}."""
+    data = {}
+    text = read_text(path)
+    data["owners"] = set(re.findall(r"cname=([\w.]+)", text))
+    m = re.search(r"SSID:\s*([^,\n]+)", text)
     if m:
-        datos["ssid"] = m.group(1).strip()
-    m = re.search(r"[Ff]requency:\s*(\d{4})", texto)
+        data["ssid"] = m.group(1).strip()
+    m = re.search(r"[Ff]requency:\s*(\d{4})", text)
     if m:
-        datos["frecuencia"] = int(m.group(1))
-    return datos
+        data["frequency"] = int(m.group(1))
+    return data
 
 
-def banda(frecuencia):
-    """Etiqueta de banda a partir de la frecuencia en MHz (mejor esfuerzo)."""
-    if frecuencia is None:
-        return "no detectada"
-    if frecuencia < 3000:
+def band(frequency):
+    """Band label from the frequency in MHz (best effort)."""
+    if frequency is None:
+        return "not detected"
+    if frequency < 3000:
         return "2.4 GHz"
-    if frecuencia < 5900:
+    if frequency < 5900:
         return "5 GHz"
     return "6 GHz"
 
 
-def clasificar(nombre, habilitados, deshabilitados, keep, duenos_wifi=None):
-    """Devuelve (estado, motivo) para un paquete de la lista.
+def classify(name, enabled, disabled, keep, wifi_owners=None):
+    """Return (state, reason) for a package in the list.
 
-    duenos_wifi: paquetes dueños de redes guardadas, o None si no hay captura.
+    wifi_owners: packages that own saved networks, or None if there is no capture.
     """
-    if nombre in keep:
-        return RECHAZADO, "keep: lo pidió el usuario"
-    if re.match(CORE_RE, nombre) and not re.match(CORE_OK, nombre):
-        return RECHAZADO, "núcleo de Android/TV middleware: no se toca"
-    if re.match(FACTORY_RE, nombre):
-        return RECHAZADO, "menú de fábrica o servicio: no se toca"
-    if duenos_wifi is not None and nombre in duenos_wifi:
-        return RECHAZADO, "dueño de una Wi-Fi guardada: apagarlo borra la red"
-    if not duenos_wifi and nombre == SETUPWRAITH:
-        return RECHAZADO, "sin dueños legibles en dumpsys wifi no se sabe si es dueño de la Wi-Fi"
-    if nombre in habilitados:
-        return APLICAR, "habilitado y no es núcleo"
-    if deshabilitados is not None:
-        if nombre in deshabilitados:
-            return YA_APAGADO, "ya estaba deshabilitado"
-        return NO_INSTALADO, "no aparece en -e ni -d"
-    return NO_INSTALADO, "ausente en -e (sin captura -d no se distingue de 'ya apagado')"
+    if name in keep:
+        return REJECTED, "keep: the user asked for it"
+    if re.match(CORE_RE, name) and not re.match(CORE_OK, name):
+        return REJECTED, "Android/TV core or middleware: do not touch"
+    if re.match(FACTORY_RE, name):
+        return REJECTED, "factory menu or service: do not touch"
+    if wifi_owners is not None and name in wifi_owners:
+        return REJECTED, "owner of a saved Wi-Fi network: disabling it erases the network"
+    if not wifi_owners and name == SETUPWRAITH:
+        return REJECTED, "with no readable owners in dumpsys wifi there is no way to know if it owns the Wi-Fi"
+    if name in enabled:
+        return APPLY, "enabled and not core"
+    if disabled is not None:
+        if name in disabled:
+            return ALREADY_DISABLED, "it was already disabled"
+        return NOT_INSTALLED, "it does not appear in -e or -d"
+    return NOT_INSTALLED, "missing from -e (without a -d capture it cannot be told apart from 'already disabled')"
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Plan de debloat Android offline: clasifica la lista sin tocar la tele.")
-    parser.add_argument("--lista", required=True, help="archivo con los paquetes a deshabilitar")
-    parser.add_argument("--habilitados", required=True,
-                        help="captura de: pm list packages -e --user 0")
-    parser.add_argument("--deshabilitados",
-                        help="captura opcional de: pm list packages -d --user 0")
-    parser.add_argument("--wifi", help="captura opcional de: dumpsys wifi")
-    parser.add_argument("--keep", action="append", default=[], metavar="PAQUETE",
-                        help="paquete que se conserva aunque esté en la lista (se repite)")
-    parser.add_argument("--salida", help="escribe aquí solo los paquetes en estado 'aplicar'")
+        description="Offline Android debloat plan: classifies the list without touching the TV.")
+    parser.add_argument("--list", required=True, help="file with the packages to disable")
+    parser.add_argument("--enabled", required=True,
+                        help="capture of: pm list packages -e --user 0")
+    parser.add_argument("--disabled",
+                        help="optional capture of: pm list packages -d --user 0")
+    parser.add_argument("--wifi", help="optional capture of: dumpsys wifi")
+    parser.add_argument("--keep", action="append", default=[], metavar="PACKAGE",
+                        help="package kept even if it is in the list (repeatable)")
+    parser.add_argument("--output", help="write only the packages in 'apply' state here")
     args = parser.parse_args(argv)
 
     try:
-        lista = leer_lista(args.lista)
-        habilitados = leer_paquetes(args.habilitados)
-        deshabilitados = leer_paquetes(args.deshabilitados) if args.deshabilitados else None
-        wifi = leer_wifi(args.wifi) if args.wifi else None
+        listing = read_list(args.list)
+        enabled = read_packages(args.enabled)
+        disabled = read_packages(args.disabled) if args.disabled else None
+        wifi = read_wifi(args.wifi) if args.wifi else None
     except OSError as e:
-        print("no se pudo leer una entrada: %s" % e, file=sys.stderr)
+        print("could not read an input: %s" % e, file=sys.stderr)
         return 2
 
-    if not lista:
-        print("la lista no tiene paquetes (solo comentarios o vacía): nada que planear.",
+    if not listing:
+        print("the list has no packages (comments only or empty): nothing to plan.",
               file=sys.stderr)
         return 2
 
     keep = set(args.keep)
-    conteo = {APLICAR: 0, RECHAZADO: 0, NO_INSTALADO: 0, YA_APAGADO: 0}
-    toca_core = []
-    aplicables = []
-    duenos_wifi = wifi["duenos"] if wifi is not None else None
-    print("Plan de debloat (offline, sin tocar la tele). Nada se ejecuta con esto.")
+    counts = {APPLY: 0, REJECTED: 0, NOT_INSTALLED: 0, ALREADY_DISABLED: 0}
+    touches_core = []
+    applicable = []
+    wifi_owners = wifi["owners"] if wifi is not None else None
+    print("Debloat plan (offline, without touching the TV). Nothing is executed with this.")
     print()
-    for nombre in lista:
-        estado, motivo = clasificar(nombre, habilitados, deshabilitados, keep, duenos_wifi)
-        conteo[estado] += 1
-        if estado == APLICAR:
-            aplicables.append(nombre)
-        if estado == RECHAZADO and motivo.startswith("núcleo"):
-            toca_core.append(nombre)
-        print("  %-16s %-28s %s" % (estado, nombre, motivo))
+    for name in listing:
+        state, reason = classify(name, enabled, disabled, keep, wifi_owners)
+        counts[state] += 1
+        if state == APPLY:
+            applicable.append(name)
+        if state == REJECTED and reason.startswith("Android/TV core"):
+            touches_core.append(name)
+        print("  %-16s %-28s %s" % (state, name, reason))
 
     print()
-    print("Resumen: %d aplicar, %d rechazado, %d no instalado, %d ya apagado."
-          % (conteo[APLICAR], conteo[RECHAZADO], conteo[NO_INSTALADO], conteo[YA_APAGADO]))
+    print("Summary: %d apply, %d rejected, %d not installed, %d already disabled."
+          % (counts[APPLY], counts[REJECTED], counts[NOT_INSTALLED], counts[ALREADY_DISABLED]))
 
     if wifi is not None:
-        if "frecuencia" in wifi:
-            print("Wi-Fi detectado: %s a %d MHz (%s). Muchas teles son solo 2.4 GHz aunque "
-                  "el SSID diga 5 GHz: manda la frecuencia, no el nombre (references/rendimiento.md)."
-                  % (wifi.get("ssid", "SSID desconocido"), wifi["frecuencia"],
-                     banda(wifi["frecuencia"])))
+        if "frequency" in wifi:
+            print("Wi-Fi detected: %s at %d MHz (%s). Many TVs are 2.4 GHz only even "
+                  "though the SSID says 5 GHz: the frequency decides, not the name "
+                  "(references/performance.md)."
+                  % (wifi.get("ssid", "unknown SSID"), wifi["frequency"],
+                     band(wifi["frequency"])))
         else:
-            print("Wi-Fi: no se pudo leer la frecuencia en la captura; revisarla a mano antes "
-                  "de culpar a la tele.")
+            print("Wi-Fi: the frequency could not be read from the capture; check it by hand "
+                  "before blaming the TV.")
 
-    if toca_core:
+    if touches_core:
         print()
-        print("PLAN BLOQUEADO: la lista toca paquetes del núcleo de Android o del middleware "
-              "de la tele:", ", ".join(toca_core))
-        print("Sácalos de la lista (o coméntalos) y vuelve a correr esto. En la tele no se "
-              "envió nada.")
+        print("PLAN BLOCKED: the list touches Android core or TV middleware "
+              "packages:", ", ".join(touches_core))
+        print("Take them out of the list (or comment them out) and run this again. Nothing "
+              "was sent to the TV.")
         return 1
 
-    if args.salida:
+    if args.output:
         try:
-            with open(args.salida, "w", encoding="utf-8", newline="\n") as f:
-                f.write("".join(p + "\n" for p in aplicables))
+            with open(args.output, "w", encoding="utf-8", newline="\n") as f:
+                f.write("".join(p + "\n" for p in applicable))
         except OSError as e:
-            print("no se pudo escribir la salida: %s" % e, file=sys.stderr)
+            print("could not write the output: %s" % e, file=sys.stderr)
             return 2
 
     print()
-    print("Si el plan se aprueba: aplicar por lotes con tools/disable de cleanyourtv, "
-          "verificar tras cada lote y esperar >= 45 s antes de reiniciar "
+    print("If the plan is approved: apply in batches with cleanyourtv's tools/disable, "
+          "verify after each batch and wait >= 45 s before rebooting "
           "(references/android.md).")
     return 0
 
