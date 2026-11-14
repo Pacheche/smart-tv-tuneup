@@ -5,7 +5,7 @@ The whole Android part is without root and without `uninstall`. If a step cannot
 ## 1. Identify (read-only)
 
 - Model, brand, firmware and fingerprint: `getprop ro.product.model`, `ro.build.fingerprint`, `ro.board.platform`, `ro.build.version.release`.
-- Ports: 5555 (network ADB). If it is closed: USB debugging is missing, or the TV only offers Wireless debugging (Google TV) → `adb pair` with the code from Developer > Wireless debugging, then `adb connect`, `adb tcpip 5555`.
+- Ports: 5555 (network ADB). If it is closed: USB debugging is missing, or the TV only offers Wireless debugging (Google TV) → `adb pair <IP>:<pairing port> <code>` with the port and code from Developer > Wireless debugging > Pair device, then `adb connect <IP>:<port>` with the other port shown on the Wireless debugging screen (both change each time), then `adb tcpip 5555`.
 - The first authorization without "Allow always" only holds for that connection: ask for "Allow always" on the TV and retry once (without it, the next call hangs ~120 s).
 - If the TV does not respond after a reboot: on TCL Android TV port 5555 reopens ~25 s after boot, before `sys.boot_completed`; wait for `getprop sys.boot_completed` before measuring anything.
 - Look for the profile of the closest model in the cleanyourtv examples (brand, model, chip such as rtd2851/mt9221/s905x4, Android, platform name such as BeyondTV/PatchWall) and read its header before deciding.
@@ -59,7 +59,7 @@ If you are going to change the Home, do section 6 first. Without a verified new 
 
 - Animation scales to 0.5 (`settings put global window_animation_scale 0.5`, same for `transition_animation_scale`, `animator_duration_scale`); `restore` resets them.
 - Compile the dock apps to full: `cmd package compile -m speed -f <pkg>`, one per call; verify with `dumpsys package dexopt` (`status=speed`) instead of retrying. **Note:** a Play Store update returns the app to `speed-profile` (observed on a TCL BeyondTV): without root it cannot be pinned, you have to repeat it.
-- Extreme mode only on very weak TVs (1 GB or less, Android 7-9) and with the owner's agreement: scales to 0, apps without background (`appops RUN_ANY_IN_BACKGROUND ignore` + bucket `rare`; never music, casting, launcher, keyboard or input services) and `pm trim-caches`.
+- Extreme mode only on very weak TVs (1 GB or less, Android 7-9) and with the owner's agreement: scales to 0, apps without background (`cmd appops set <pkg> RUN_ANY_IN_BACKGROUND ignore` plus `am set-standby-bucket <pkg> rare`, one package per call; never music, casting, launcher, keyboard or input services) and `pm trim-caches <size>` (it needs the free space to reach, for example `pm trim-caches 2G`).
 
 ## 8. Close ADB
 

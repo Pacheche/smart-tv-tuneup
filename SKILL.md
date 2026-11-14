@@ -2,7 +2,7 @@
 name: smart-tv-tuneup
 description: "Use when a smart TV is slow (tele lenta, TV lenta), shows bloatware or ads, or the user wants to debloat, clean up or speed up an Android TV or Google TV (TCL, Hisense), tune an LG webOS or Samsung Tizen set, choose or install a launcher without replacing the factory Home, work over ADB, SDB or webOS SSH, close ADB when finished, or recover a TV that stopped responding after changes; also use when the user asks whether debloating really makes a TV faster or why their TV lags."
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # smart-tv-tuneup
